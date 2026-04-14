@@ -9,7 +9,7 @@ import { SignaturePad } from '../components/SignaturePad';
 import { ChevronLeft, Loader2, CheckCircle2, Download, Share2, Bell, X, Plus, ZoomIn, ClipboardList } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
-import html2canvas from 'html2canvas';
+import { domToPng } from 'modern-screenshot';
 
 export const VisitorForm: React.FC = () => {
   const { adminId, purposeId } = useParams<{ adminId: string, purposeId: string }>();
@@ -148,40 +148,17 @@ export const VisitorForm: React.FC = () => {
     if (!element) return;
     
     try {
-      // Ensure all images are loaded before capturing
-      const images = element.getElementsByTagName('img');
-      const imagePromises = Array.from(images).map(img => {
-        if (img.complete) return Promise.resolve();
-        return new Promise((resolve, reject) => {
-          img.onload = resolve;
-          img.onerror = reject;
-        });
-      });
-      
-      await Promise.all(imagePromises);
-      // Extra wait for fonts and layout
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const canvas = await html2canvas(element, {
+      // modern-screenshot uses SVG foreignObject which handles oklch correctly
+      const dataUrl = await domToPng(element, {
         backgroundColor: '#ffffff',
         scale: 2,
-        useCORS: true,
-        allowTaint: false, // Changed to false to prevent tainted canvas errors
-        logging: true, // Enable logging for easier debugging
-        width: element.offsetWidth,
-        height: element.offsetHeight,
-        scrollX: 0,
-        scrollY: -window.scrollY, // Adjust for scroll position
-        onclone: (clonedDoc) => {
-          // Ensure the cloned element is visible
-          const clonedElement = clonedDoc.getElementById('submission-summary');
-          if (clonedElement) {
-            clonedElement.style.transform = 'none';
-          }
+        quality: 1,
+        features: {
+          // Disable font embedding if it causes issues, but usually fine
+          copyStyles: true,
         }
       });
       
-      const dataUrl = canvas.toDataURL('image/png');
       const link = document.createElement('a');
       link.download = `visit-log-${new Date().getTime()}.png`;
       link.href = dataUrl;
