@@ -1,49 +1,68 @@
-import React, { useState } from 'react';
-import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import React, { useState, useEffect } from 'react';
+import { signInWithRedirect, getRedirectResult, GoogleAuthProvider } from 'firebase/auth';
 import { auth, db } from '../firebase';
 import { doc, getDoc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { Button, Card } from '../components/ui/Button';
-import { ClipboardList, LogIn, AlertCircle } from 'lucide-react';
+import { ClipboardList, LogIn, AlertCircle, Loader2 } from 'lucide-react';
 
 export const AdminLogin: React.FC = () => {
   const [loading, setLoading] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkRedirect = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result) {
+          await handleUserLogin(result.user);
+        }
+      } catch (err: any) {
+        console.error('Redirect result error:', err);
+        setError('로그인 처리 중 오류가 발생했습니다.');
+      } finally {
+        setCheckingAuth(false);
+      }
+    };
+
+    checkRedirect();
+  }, []);
+
+  const handleUserLogin = async (user: any) => {
+    // Check if user already in DB
+    const userDocRef = doc(db, 'users', user.uid);
+    const userDoc = await getDoc(userDocRef);
+
+    if (!userDoc.exists()) {
+      // Create admin profile for the first time for ANY user who signs up
+      await setDoc(userDocRef, {
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+        role: 'admin',
+        createdAt: serverTimestamp(),
+        qrText: '모든 방문 목적을 선택할 수 있는\n메인 페이지로 연결됩니다 작성후 관리자에게 보여주시기 바랍니다.',
+        qrTitle: '공통 방문 QR',
+      });
+
+      // Seed default purposes
+      await seedDefaultPurposes(user.uid);
+    }
+    
+    navigate('/admin');
+  };
 
   const handleGoogleLogin = async () => {
     setLoading(true);
     setError(null);
     try {
       const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      // Check if user already in DB
-      const userDocRef = doc(db, 'users', user.uid);
-      const userDoc = await getDoc(userDocRef);
-
-      if (!userDoc.exists()) {
-        // Create admin profile for the first time for ANY user who signs up
-        await setDoc(userDocRef, {
-          email: user.email,
-          displayName: user.displayName,
-          photoURL: user.photoURL,
-          role: 'admin',
-          createdAt: serverTimestamp(),
-          qrText: '모든 방문 목적을 선택할 수 있는\n메인 페이지로 연결됩니다 작성후 관리자에게 보여주시기 바랍니다.',
-          qrTitle: '공통 방문 QR',
-        });
-
-        // Seed default purposes
-        await seedDefaultPurposes(user.uid);
-      }
-      
-      navigate('/admin');
+      await signInWithRedirect(auth, provider);
     } catch (err: any) {
       console.error('Login error:', err);
       setError('로그인 중 오류가 발생했습니다.');
-    } finally {
       setLoading(false);
     }
   };
@@ -97,6 +116,14 @@ export const AdminLogin: React.FC = () => {
       });
     }
   };
+
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
