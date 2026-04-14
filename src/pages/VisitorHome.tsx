@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { collection, query, where, getDocs, orderBy, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { VisitPurpose, AdminUser } from '../types';
 import { Card, Button } from '../components/ui/Button';
 import { useNavigate, Link, useParams } from 'react-router-dom';
-import { ClipboardList, ChevronRight, Loader2, Search, Calendar, User, Phone, X, Download } from 'lucide-react';
+import { ClipboardList, ChevronRight, Loader2, Search, Calendar, User, Phone, X, Download, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -14,6 +14,7 @@ export const VisitorHome: React.FC = () => {
   const [purposes, setPurposes] = useState<VisitPurpose[]>([]);
   const [adminData, setAdminData] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showCheckModal, setShowCheckModal] = useState(false);
   const [checkData, setCheckData] = useState({ date: format(new Date(), 'yyyy-MM-dd'), name: '', contact: '' });
   const [foundLog, setFoundLog] = useState<any>(null);
@@ -23,32 +24,63 @@ export const VisitorHome: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!adminId) return;
+    if (!adminId) {
+      setError('올바르지 않은 접근입니다. QR코드를 다시 확인해 주세요.');
+      setLoading(false);
+      return;
+    }
+
+    const cleanAdminId = adminId.trim();
+    console.log('Fetching data for admin:', cleanAdminId);
+
+    setLoading(true);
+    setError(null);
+
+    // 1. Fetch Admin Data (one-time is fine)
+    const fetchAdmin = async () => {
       try {
-        // Fetch Admin Data for Branding
-        const adminDoc = await getDoc(doc(db, 'users', adminId));
+        const adminDoc = await getDoc(doc(db, 'users', cleanAdminId));
         if (adminDoc.exists()) {
           setAdminData(adminDoc.data() as AdminUser);
+        } else {
+          console.error('Admin not found in Firestore:', cleanAdminId);
+          // Don't set error yet, maybe purposes will load? 
+          // Actually, if admin doesn't exist, it's a problem.
+          setError('등록되지 않은 관리자 계정입니다.');
         }
-
-        const q = query(
-          collection(db, 'purposes'),
-          where('ownerId', '==', adminId),
-          where('isActive', '==', true),
-          orderBy('createdAt', 'desc')
-        );
-        const snapshot = await getDocs(q);
-        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as VisitPurpose));
-        setPurposes(data);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching admin:', err);
       }
     };
 
-    fetchData();
+    fetchAdmin();
+
+    // 2. Use onSnapshot for purposes - more reliable on mobile/flaky networks
+    const q = query(
+      collection(db, 'purposes'),
+      where('ownerId', '==', cleanAdminId),
+      where('isActive', '==', true)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as VisitPurpose));
+      
+      // Sort in memory
+      const sortedData = data.sort((a, b) => {
+        const timeA = a.createdAt?.toMillis?.() || 0;
+        const timeB = b.createdAt?.toMillis?.() || 0;
+        return timeB - timeA;
+      });
+      
+      setPurposes(sortedData);
+      setLoading(false);
+    }, (err) => {
+      console.error('Firestore purposes snapshot error:', err);
+      setError('데이터를 불러오는 중 오류가 발생했습니다.');
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, [adminId]);
 
   const handleCheckLog = async () => {
@@ -111,6 +143,21 @@ export const VisitorHome: React.FC = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-6">
+          <AlertCircle className="w-10 h-10 text-red-500" />
+        </div>
+        <h1 className="text-xl font-bold text-gray-900 mb-2">접속 오류</h1>
+        <p className="text-gray-500 mb-8 whitespace-pre-wrap">{error}</p>
+        <Button className="w-full max-w-xs" onClick={() => window.location.reload()}>
+          다시 시도하기
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center p-6 relative">
       <header className="w-full max-w-md text-center mb-10 mt-8">
@@ -123,13 +170,28 @@ export const VisitorHome: React.FC = () => {
         </div>
         <h1 className="text-2xl font-bold text-gray-900">{adminData?.brandingTitle || '디지털 방문일지'}</h1>
         <p className="text-gray-500 mt-2">방문 목적을 선택해 주세요.</p>
+        <p className="text-[8px] text-gray-300 mt-1">v1.0.2</p>
       </header>
 
       <main className="w-full max-w-md space-y-4">
         {purposes.length === 0 ? (
-          <Card className="p-8 text-center">
-            <p className="text-gray-500">등록된 방문 목적이 없습니다.</p>
-            <p className="text-sm text-gray-400 mt-1">관리자에게 문의해 주세요.</p>
+          <Card className="p-10 text-center flex flex-col items-center gap-4">
+            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center">
+              <ClipboardList className="w-8 h-8 text-gray-300" />
+            </div>
+            <div>
+              <p className="text-gray-600 font-bold">등록된 방문 목적이 없습니다.</p>
+              <p className="text-xs text-gray-400 mt-2">관리자 ID: {adminId}</p>
+              <p className="text-sm text-gray-400 mt-2">관리자가 아직 서식을 생성하지 않았거나<br />일시적인 오류일 수 있습니다.</p>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="mt-2"
+              onClick={() => window.location.reload()}
+            >
+              새로고침
+            </Button>
           </Card>
         ) : (
           purposes.map((purpose, index) => (
