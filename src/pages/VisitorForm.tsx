@@ -148,23 +148,47 @@ export const VisitorForm: React.FC = () => {
     if (!element) return;
     
     try {
-      // Small delay to ensure everything is rendered
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Ensure all images are loaded before capturing
+      const images = element.getElementsByTagName('img');
+      const imagePromises = Array.from(images).map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+        });
+      });
+      
+      await Promise.all(imagePromises);
+      // Extra wait for fonts and layout
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       const canvas = await html2canvas(element, {
         backgroundColor: '#ffffff',
         scale: 2,
         useCORS: true,
-        allowTaint: true,
-        logging: false,
+        allowTaint: false, // Changed to false to prevent tainted canvas errors
+        logging: true, // Enable logging for easier debugging
+        width: element.offsetWidth,
+        height: element.offsetHeight,
+        scrollX: 0,
+        scrollY: -window.scrollY, // Adjust for scroll position
+        onclone: (clonedDoc) => {
+          // Ensure the cloned element is visible
+          const clonedElement = clonedDoc.getElementById('submission-summary');
+          if (clonedElement) {
+            clonedElement.style.transform = 'none';
+          }
+        }
       });
+      
+      const dataUrl = canvas.toDataURL('image/png');
       const link = document.createElement('a');
       link.download = `visit-log-${new Date().getTime()}.png`;
-      link.href = canvas.toDataURL('image/png');
+      link.href = dataUrl;
       link.click();
-    } catch (error) {
-      console.error('Error generating image:', error);
-      alert('이미지 생성 중 오류가 발생했습니다. 브라우저 설정을 확인하거나 잠시 후 다시 시도해 주세요.');
+    } catch (error: any) {
+      console.error('Detailed Error generating image:', error);
+      alert(`이미지 생성 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`);
     }
   };
 
@@ -188,7 +212,12 @@ export const VisitorForm: React.FC = () => {
             <div className="text-center mb-8">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl shadow-lg mb-6 overflow-hidden">
                 {adminData?.brandingLogo ? (
-                  <img src={adminData.brandingLogo} alt="Logo" className="w-full h-full object-contain p-2" />
+                  <img 
+                    src={adminData.brandingLogo} 
+                    alt="Logo" 
+                    className="w-full h-full object-contain p-2"
+                    crossOrigin="anonymous"
+                  />
                 ) : (
                   <ClipboardList className="w-8 h-8 text-white" />
                 )}
@@ -231,7 +260,12 @@ export const VisitorForm: React.FC = () => {
               <div className="pt-4">
                 <p className="text-xs text-gray-400 mb-2">전자서명</p>
                 <div className="border border-gray-100 rounded-xl p-2 bg-gray-50">
-                  <img src={submittedLog.signature} alt="Signature" className="h-20 mx-auto object-contain" />
+                  <img 
+                    src={submittedLog.signature} 
+                    alt="Signature" 
+                    className="h-20 mx-auto object-contain" 
+                    crossOrigin="anonymous"
+                  />
                 </div>
               </div>
               
