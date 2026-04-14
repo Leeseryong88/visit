@@ -148,15 +148,17 @@ export const VisitorForm: React.FC = () => {
     if (!element) return;
     
     try {
-      // modern-screenshot uses SVG foreignObject which handles oklch correctly
+      // modern-screenshot can sometimes fail with oklch colors in Tailwind v4.
+      // We'll temporarily apply a class that forces RGB colors or use a simpler capture method.
       const dataUrl = await domToPng(element, {
         backgroundColor: '#ffffff',
         scale: 2,
         quality: 1,
-        features: {
-          // Disable font embedding if it causes issues, but usually fine
-          copyStyles: true,
-        }
+        // This filter can help skip problematic elements if needed
+        filter: (node) => {
+          if (node instanceof HTMLElement && node.classList.contains('animate-spin')) return false;
+          return true;
+        },
       });
       
       const link = document.createElement('a');
@@ -165,7 +167,14 @@ export const VisitorForm: React.FC = () => {
       link.click();
     } catch (error: any) {
       console.error('Detailed Error generating image:', error);
-      alert(`이미지 생성 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`);
+      
+      // Fallback: If modern-screenshot fails due to oklch, try to provide a more helpful message
+      // and perhaps a simpler alternative if available.
+      if (error.message?.includes('oklch')) {
+        alert('현재 브라우저에서 최신 색상 형식을 지원하지 않아 이미지 생성에 실패했습니다. 화면을 캡처(스크린샷)하여 보관해 주세요.');
+      } else {
+        alert(`이미지 생성 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`);
+      }
     }
   };
 
@@ -185,9 +194,9 @@ export const VisitorForm: React.FC = () => {
           animate={{ scale: 1, opacity: 1 }}
           className="w-full max-w-md space-y-6"
         >
-          <div id="submission-summary" className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100">
+          <div id="submission-summary" className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100" style={{ backgroundColor: '#ffffff', color: '#111827' }}>
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl shadow-lg mb-6 overflow-hidden">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl shadow-lg mb-6 overflow-hidden" style={{ backgroundColor: '#2563eb' }}>
                 {adminData?.brandingLogo ? (
                   <img 
                     src={adminData.brandingLogo} 
@@ -199,24 +208,24 @@ export const VisitorForm: React.FC = () => {
                   <ClipboardList className="w-8 h-8 text-white" />
                 )}
               </div>
-              <h2 className="text-2xl font-bold text-gray-900">{adminData?.brandingTitle || '디지털 방문일지'}</h2>
-              <p className="text-sm text-green-600 font-medium mt-1">방문일지가 성공적으로 접수되었습니다.</p>
+              <h2 className="text-2xl font-bold" style={{ color: '#111827' }}>{adminData?.brandingTitle || '디지털 방문일지'}</h2>
+              <p className="text-sm font-medium mt-1" style={{ color: '#16a34a' }}>방문일지가 성공적으로 접수되었습니다.</p>
             </div>
 
-            <div className="space-y-4 border-t border-gray-100 pt-6">
-              <div className="bg-gray-50 p-4 rounded-xl">
-                <p className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">방문 목적</p>
-                <p className="text-lg font-bold text-gray-900">{submittedLog.purposeName}</p>
+            <div className="space-y-4 border-t pt-6" style={{ borderTopColor: '#f3f4f6' }}>
+              <div className="p-4 rounded-xl" style={{ backgroundColor: '#f9fafb' }}>
+                <p className="text-xs uppercase font-bold tracking-wider mb-1" style={{ color: '#9ca3af' }}>방문 목적</p>
+                <p className="text-lg font-bold" style={{ color: '#111827' }}>{submittedLog.purposeName}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs text-gray-400">방문자</p>
-                  <p className="font-bold text-gray-900">{submittedLog.visitorName}</p>
+                  <p className="text-xs" style={{ color: '#9ca3af' }}>방문자</p>
+                  <p className="font-bold" style={{ color: '#111827' }}>{submittedLog.visitorName}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400">연락처</p>
-                  <p className="font-bold text-gray-900">{submittedLog.visitorContact}</p>
+                  <p className="text-xs" style={{ color: '#9ca3af' }}>연락처</p>
+                  <p className="font-bold" style={{ color: '#111827' }}>{submittedLog.visitorContact}</p>
                 </div>
               </div>
 
@@ -226,17 +235,17 @@ export const VisitorForm: React.FC = () => {
                   const value = submittedLog.data[field.id];
                   if (!value) return null;
                   return (
-                    <div key={field.id} className="border-b border-gray-50 pb-2">
-                      <p className="text-xs text-gray-400">{field.label}</p>
-                      <p className="text-sm font-medium text-gray-900">{Array.isArray(value) ? value.join(', ') : value}</p>
+                    <div key={field.id} className="border-b pb-2" style={{ borderBottomColor: '#f9fafb' }}>
+                      <p className="text-xs" style={{ color: '#9ca3af' }}>{field.label}</p>
+                      <p className="text-sm font-medium" style={{ color: '#111827' }}>{Array.isArray(value) ? value.join(', ') : value}</p>
                     </div>
                   );
                 })}
               </div>
 
               <div className="pt-4">
-                <p className="text-xs text-gray-400 mb-2">전자서명</p>
-                <div className="border border-gray-100 rounded-xl p-2 bg-gray-50">
+                <p className="text-xs mb-2" style={{ color: '#9ca3af' }}>전자서명</p>
+                <div className="border rounded-xl p-2" style={{ borderColor: '#f3f4f6', backgroundColor: '#f9fafb' }}>
                   <img 
                     src={submittedLog.signature} 
                     alt="Signature" 
@@ -246,7 +255,7 @@ export const VisitorForm: React.FC = () => {
                 </div>
               </div>
               
-              <p className="text-[10px] text-center text-gray-300 pt-4 italic">
+              <p className="text-[10px] text-center pt-4 italic" style={{ color: '#d1d5db' }}>
                 제출 일시: {new Date().toLocaleString()}
               </p>
             </div>
