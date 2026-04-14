@@ -1,0 +1,64 @@
+{
+  "entities": {
+    "VisitPurpose": {
+      "title": "VisitPurpose",
+      "description": "Defines a template for a specific type of visit.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Name of the purpose (e.g., General Visit)" },
+        "description": { "type": "string", "description": "Brief description of the purpose" },
+        "fields": {
+          "type": "array",
+          "description": "List of form fields for this purpose"
+        },
+        "isActive": { "type": "boolean", "description": "Whether this template is currently active" },
+        "ownerId": { "type": "string", "description": "UID of the admin who owns this template" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "fields"]
+    },
+    "VisitorLog": {
+      "title": "VisitorLog",
+      "description": "A record of a visitor's entry.",
+      "type": "object",
+      "properties": {
+        "purposeId": { "type": "string", "description": "Reference to the VisitPurpose" },
+        "purposeName": { "type": "string", "description": "Name of the purpose at the time of visit" },
+        "visitorName": { "type": "string", "description": "Name of the visitor" },
+        "visitorContact": { "type": "string", "description": "Contact number of the visitor" },
+        "data": { "type": "object", "description": "Dynamic form data submitted by the visitor" },
+        "signature": { "type": "string", "description": "Base64 encoded signature image" },
+        "ownerId": { "type": "string", "description": "UID of the admin who owns this log" },
+        "visitDate": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["purposeId", "visitorName", "visitorContact", "data", "signature", "visitDate"]
+    },
+    "User": {
+      "title": "User",
+      "description": "Admin user profile.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["admin"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "role"]
+    }
+  },
+  "firestore": {
+    "/purposes/{purposeId}": {
+      "schema": "VisitPurpose",
+      "description": "Collection of visit purpose templates."
+    },
+    "/logs/{logId}": {
+      "schema": "VisitorLog",
+      "description": "Collection of submitted visitor logs."
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Admin user profiles."
+    }
+  }
+}

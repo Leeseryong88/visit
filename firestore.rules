@@ -1,0 +1,43 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
+        (request.auth.token.email == "kidcap1001@gmail.com" && request.auth.token.email_verified == true)
+      );
+    }
+
+    function isOwner(data) {
+      return isAuthenticated() && 
+             ('ownerId' in data) && 
+             data.ownerId == request.auth.uid;
+    }
+
+    // Rules
+    match /purposes/{purposeId} {
+      allow read: if true; 
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && (isOwner(resource.data) || isAdmin());
+    }
+
+    match /logs/{logId} {
+      allow read: if isAuthenticated() && (resource.data.ownerId == request.auth.uid || isAdmin());
+      allow create: if true; // Visitors can create logs without auth
+      allow update, delete: if isAuthenticated() && (isOwner(resource.data) || isAdmin());
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+    }
+  }
+}

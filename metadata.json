@@ -1,0 +1,6 @@
+{
+  "name": "디지털 방문일지",
+  "description": "QR코드를 통한 간편한 현장 방문일지 작성 및 관리 시스템",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
