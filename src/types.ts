@@ -43,4 +43,6 @@ export interface AdminUser {
   isSubscribed?: boolean;
   qrText?: string;
   qrTitle?: string;
+  brandingLogo?: string;
+  brandingTitle?: string;
 }

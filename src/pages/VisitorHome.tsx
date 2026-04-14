@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { VisitPurpose } from '../types';
+import { VisitPurpose, AdminUser } from '../types';
 import { Card, Button } from '../components/ui/Button';
 import { useNavigate, Link, useParams } from 'react-router-dom';
 import { ClipboardList, ChevronRight, Loader2, Search, Calendar, User, Phone, X, Download } from 'lucide-react';
@@ -12,6 +12,7 @@ import { ko } from 'date-fns/locale';
 export const VisitorHome: React.FC = () => {
   const { adminId } = useParams<{ adminId: string }>();
   const [purposes, setPurposes] = useState<VisitPurpose[]>([]);
+  const [adminData, setAdminData] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [showCheckModal, setShowCheckModal] = useState(false);
   const [checkData, setCheckData] = useState({ date: format(new Date(), 'yyyy-MM-dd'), name: '', contact: '' });
@@ -22,9 +23,15 @@ export const VisitorHome: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchPurposes = async () => {
+    const fetchData = async () => {
       if (!adminId) return;
       try {
+        // Fetch Admin Data for Branding
+        const adminDoc = await getDoc(doc(db, 'users', adminId));
+        if (adminDoc.exists()) {
+          setAdminData(adminDoc.data() as AdminUser);
+        }
+
         const q = query(
           collection(db, 'purposes'),
           where('ownerId', '==', adminId),
@@ -35,13 +42,13 @@ export const VisitorHome: React.FC = () => {
         const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as VisitPurpose));
         setPurposes(data);
       } catch (error) {
-        console.error('Error fetching purposes:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPurposes();
+    fetchData();
   }, [adminId]);
 
   const handleCheckLog = async () => {
@@ -107,10 +114,14 @@ export const VisitorHome: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center p-6 relative">
       <header className="w-full max-w-md text-center mb-10 mt-8">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl shadow-lg mb-4">
-          <ClipboardList className="w-8 h-8 text-white" />
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl shadow-lg mb-4 overflow-hidden">
+          {adminData?.brandingLogo ? (
+            <img src={adminData.brandingLogo} alt="Logo" className="w-full h-full object-contain p-2" />
+          ) : (
+            <ClipboardList className="w-8 h-8 text-white" />
+          )}
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">디지털 방문일지</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{adminData?.brandingTitle || '디지털 방문일지'}</h1>
         <p className="text-gray-500 mt-2">방문 목적을 선택해 주세요.</p>
       </header>
 

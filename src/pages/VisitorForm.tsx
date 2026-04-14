@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
-import { VisitPurpose } from '../types';
+import { VisitPurpose, AdminUser } from '../types';
 import { Card, Button, Input, Label } from '../components/ui/Button';
 import { DynamicForm } from '../components/DynamicForm';
 import { SignaturePad } from '../components/SignaturePad';
-import { ChevronLeft, Loader2, CheckCircle2, Download, Share2, Bell, X, Plus, ZoomIn } from 'lucide-react';
+import { ChevronLeft, Loader2, CheckCircle2, Download, Share2, Bell, X, Plus, ZoomIn, ClipboardList } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import html2canvas from 'html2canvas';
@@ -14,6 +14,7 @@ import html2canvas from 'html2canvas';
 export const VisitorForm: React.FC = () => {
   const { adminId, purposeId } = useParams<{ adminId: string, purposeId: string }>();
   const [purpose, setPurpose] = useState<VisitPurpose | null>(null);
+  const [adminData, setAdminData] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -32,9 +33,15 @@ export const VisitorForm: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchPurpose = async () => {
+    const fetchData = async () => {
       if (!purposeId || !adminId) return;
       try {
+        // Fetch Admin Data
+        const adminDoc = await getDoc(doc(db, 'users', adminId));
+        if (adminDoc.exists()) {
+          setAdminData(adminDoc.data() as AdminUser);
+        }
+
         const docRef = doc(db, 'purposes', purposeId);
         const snapshot = await getDoc(docRef);
         if (snapshot.exists()) {
@@ -49,13 +56,13 @@ export const VisitorForm: React.FC = () => {
           navigate(`/s/${adminId}`);
         }
       } catch (error) {
-        console.error('Error fetching purpose:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPurpose();
+    fetchData();
   }, [purposeId, adminId, navigate]);
 
   const handleFieldChange = (id: string, value: any) => {
@@ -179,9 +186,15 @@ export const VisitorForm: React.FC = () => {
         >
           <div id="submission-summary" className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100">
             <div className="text-center mb-8">
-              <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900">제출 완료</h2>
-              <p className="text-sm text-gray-500 mt-1">방문일지가 성공적으로 접수되었습니다.</p>
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl shadow-lg mb-6 overflow-hidden">
+                {adminData?.brandingLogo ? (
+                  <img src={adminData.brandingLogo} alt="Logo" className="w-full h-full object-contain p-2" />
+                ) : (
+                  <ClipboardList className="w-8 h-8 text-white" />
+                )}
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900">{adminData?.brandingTitle || '디지털 방문일지'}</h2>
+              <p className="text-sm text-green-600 font-medium mt-1">방문일지가 성공적으로 접수되었습니다.</p>
             </div>
 
             <div className="space-y-4 border-t border-gray-100 pt-6">
@@ -248,7 +261,16 @@ export const VisitorForm: React.FC = () => {
           <button onClick={() => navigate(`/s/${adminId}`)} className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors">
             <ChevronLeft className="w-6 h-6 text-gray-600" />
           </button>
-          <h1 className="font-bold text-gray-900 truncate">{purpose?.name}</h1>
+          <div className="flex items-center gap-3 truncate">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden">
+              {adminData?.brandingLogo ? (
+                <img src={adminData.brandingLogo} alt="Logo" className="w-full h-full object-contain p-1" />
+              ) : (
+                <ClipboardList className="w-4 h-4 text-white" />
+              )}
+            </div>
+            <h1 className="font-bold text-gray-900 truncate">{adminData?.brandingTitle || '디지털 방문일지'}</h1>
+          </div>
         </div>
       </header>
 
