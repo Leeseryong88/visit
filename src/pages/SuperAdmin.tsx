@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { collection, query, getDocs, doc, updateDoc, getDoc, where } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 import { AdminUser, VisitPurpose } from '../types';
-import { Card, Button } from '../components/ui/Button';
-import { Loader2, User, Shield, Check, X, Eye, FileText } from 'lucide-react';
+import { Card, Button, Input } from '../components/ui/Button';
+import { Loader2, User, Shield, Check, X, Eye, FileText, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export const SuperAdmin: React.FC = () => {
@@ -13,6 +13,7 @@ export const SuperAdmin: React.FC = () => {
   const [userPurposes, setUserPurposes] = useState<VisitPurpose[]>([]);
   const [loadingPurposes, setLoadingPurposes] = useState(false);
   const [showPurposesModal, setShowPurposesModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -54,6 +55,11 @@ export const SuperAdmin: React.FC = () => {
     }
   };
 
+  const filteredUsers = users.filter(user => 
+    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.uid.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -69,51 +75,67 @@ export const SuperAdmin: React.FC = () => {
         <p className="text-gray-500">전체 사용자 및 구독 권한을 관리합니다.</p>
       </div>
 
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <Input
+          placeholder="이메일 또는 UID로 사용자 검색..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+
       <div className="grid grid-cols-1 gap-4">
-        {users.map((user) => (
-          <Card key={user.uid} className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
-                <User className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="font-bold text-gray-900">{user.email}</h3>
-                <p className="text-xs text-gray-500">UID: {user.uid}</p>
-                <div className="flex gap-2 mt-1">
-                  {user.isSubscribed ? (
-                    <span className="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded-full flex items-center gap-1">
-                      <Check className="w-3 h-3" /> 구독 중
-                    </span>
-                  ) : (
-                    <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-[10px] font-bold rounded-full">
-                      미구독
-                    </span>
-                  )}
+        {filteredUsers.length === 0 ? (
+          <div className="text-center py-12 bg-white rounded-2xl border border-gray-100">
+            <p className="text-gray-500">검색 결과가 없습니다.</p>
+          </div>
+        ) : (
+          filteredUsers.map((user) => (
+            <Card key={user.uid} className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
+                  <User className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">{user.email}</h3>
+                  <p className="text-xs text-gray-500">UID: {user.uid}</p>
+                  <div className="flex gap-2 mt-1">
+                    {user.isSubscribed ? (
+                      <span className="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded-full flex items-center gap-1">
+                        <Check className="w-3 h-3" /> 구독 중
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-[10px] font-bold rounded-full">
+                        미구독
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="flex items-center gap-3">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="gap-2"
-                onClick={() => viewPurposes(user)}
-              >
-                <Eye className="w-4 h-4" /> 양식 보기
-              </Button>
-              <Button 
-                variant={user.isSubscribed ? "outline" : "primary"}
-                size="sm"
-                className="gap-2"
-                onClick={() => toggleSubscription(user.uid, !!user.isSubscribed)}
-              >
-                <Shield className="w-4 h-4" /> 
-                {user.isSubscribed ? "구독 취소" : "구독 부여"}
-              </Button>
-            </div>
-          </Card>
-        ))}
+              <div className="flex items-center gap-3">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-2"
+                  onClick={() => viewPurposes(user)}
+                >
+                  <Eye className="w-4 h-4" /> 양식 보기
+                </Button>
+                <Button 
+                  variant={user.isSubscribed ? "outline" : "primary"}
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => toggleSubscription(user.uid, !!user.isSubscribed)}
+                >
+                  <Shield className="w-4 h-4" /> 
+                  {user.isSubscribed ? "구독 취소" : "구독 부여"}
+                </Button>
+              </div>
+            </Card>
+          ))
+        )}
       </div>
 
       {/* Purposes Modal */}

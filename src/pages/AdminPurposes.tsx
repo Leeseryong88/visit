@@ -12,25 +12,10 @@ export const AdminPurposes: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [editingPurpose, setEditingPurpose] = useState<Partial<VisitPurpose> | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isAdminSubscribed, setIsAdminSubscribed] = useState(false);
 
   useEffect(() => {
     fetchPurposes();
-    fetchAdminStatus();
   }, []);
-
-  const fetchAdminStatus = async () => {
-    const user = auth.currentUser;
-    if (!user) return;
-    try {
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
-      if (userDoc.exists()) {
-        setIsAdminSubscribed(userDoc.data().isSubscribed || false);
-      }
-    } catch (error) {
-      console.error('Error fetching admin status:', error);
-    }
-  };
 
   const fetchPurposes = async () => {
     const user = auth.currentUser;
@@ -268,10 +253,6 @@ export const AdminPurposes: React.FC = () => {
                               value={field.type}
                               onChange={(e) => {
                                 const newType = e.target.value as any;
-                                if (newType === 'file' && !isAdminSubscribed) {
-                                  alert('첨부파일 기능은 구독 사용자만 이용 가능합니다.');
-                                  return;
-                                }
                                 handleFieldChange(field.id, { type: newType });
                               }}
                               disabled={field.id === 'name' || field.id === 'contact'}
@@ -281,7 +262,7 @@ export const AdminPurposes: React.FC = () => {
                               <option value="tel">연락처</option>
                               <option value="date">날짜</option>
                               <option value="time">시간</option>
-                              <option value="file" disabled={!isAdminSubscribed}>첨부파일(사진) {!isAdminSubscribed && '🔒'}</option>
+                              <option value="file">첨부파일(사진)</option>
                               <option value="select">선택(드롭다운)</option>
                               <option value="radio">선택(라디오)</option>
                               <option value="checkbox">다중 선택</option>

@@ -24,7 +24,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     { name: '방문 목적 관리', path: '/admin/purposes', icon: ClipboardList },
     { name: '방문 기록 조회', path: '/admin/logs', icon: FileText },
     { name: 'QR코드 관리', path: '/admin/qrcodes', icon: QrCode },
-    { name: '구독 서비스', path: '/admin/subscription', icon: Palette },
+    { name: '구독 서비스', path: '/admin/subscription', icon: Palette, beta: true },
   ];
 
   if (auth.currentUser?.email === 'kidcap1001@gmail.com') {
@@ -49,7 +49,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               key={item.path}
               to={item.path}
               className={cn(
-                'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors relative',
                 location.pathname === item.path
                   ? 'bg-blue-50 text-blue-700'
                   : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
@@ -57,6 +57,11 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             >
               <item.icon className="w-4 h-4" />
               {item.name}
+              {item.beta && (
+                <span className="ml-auto bg-blue-100 text-blue-600 text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                  BETA
+                </span>
+              )}
             </Link>
           ))}
         </nav>

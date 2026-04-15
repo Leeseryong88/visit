@@ -3,7 +3,7 @@ import { doc, getDoc, updateDoc, collection, query, where, getDocs, orderBy, ser
 import { db, auth } from '../firebase';
 import { AdminUser, VisitPurpose } from '../types';
 import { Card, Button, Input, Label } from '../components/ui/Button';
-import { Loader2, Save, Image as ImageIcon, Lock, X, Palette, ClipboardList, Crop, Check, Bell } from 'lucide-react';
+import { Loader2, Save, Image as ImageIcon, X, Palette, ClipboardList, Crop, Check, Bell } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 
@@ -165,11 +165,6 @@ export const AdminSubscription: React.FC = () => {
   };
 
   const handleSaveBranding = async () => {
-    if (!adminData?.isSubscribed) {
-      alert('브랜딩 관리 기능은 구독 회원만 이용 가능합니다.');
-      return;
-    }
-
     const user = auth.currentUser;
     if (!user) return;
 
@@ -203,10 +198,6 @@ export const AdminSubscription: React.FC = () => {
 
   const handleSaveNotification = async () => {
     if (!selectedPurposeId) return;
-    if (!adminData?.isSubscribed) {
-      alert('알림 기능은 구독 회원만 이용 가능합니다.');
-      return;
-    }
 
     setSaving(true);
     try {
@@ -243,8 +234,6 @@ export const AdminSubscription: React.FC = () => {
     );
   }
 
-  const isSubscribed = adminData?.isSubscribed || false;
-
   const PRESET_COLORS = [
     '#2563eb', '#3b82f6', '#0ea5e9', '#06b6d4', 
     '#10b981', '#22c55e', '#84cc16', '#eab308', 
@@ -257,7 +246,10 @@ export const AdminSubscription: React.FC = () => {
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">구독 서비스</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-gray-900">구독 서비스</h1>
+            <span className="bg-blue-600 text-white text-[10px] font-black px-2 py-0.5 rounded-md shadow-sm">BETA</span>
+          </div>
           <p className="text-gray-500">브랜딩 및 부가 기능을 관리합니다.</p>
         </div>
         
@@ -291,13 +283,11 @@ export const AdminSubscription: React.FC = () => {
                 <div className="flex items-center gap-2 mb-2">
                   <Palette className="w-5 h-5 text-blue-600" />
                   <h2 className="text-lg font-bold">표시 방식 설정</h2>
-                  {!isSubscribed && <Lock className="w-4 h-4 text-gray-400" />}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <button
                     onClick={() => setTempType('icon')}
-                    disabled={!isSubscribed}
                     className={cn(
                       "p-4 rounded-2xl border-2 transition-all text-left space-y-2",
                       tempType === 'icon' 
@@ -316,7 +306,6 @@ export const AdminSubscription: React.FC = () => {
 
                   <button
                     onClick={() => setTempType('banner')}
-                    disabled={!isSubscribed}
                     className={cn(
                       "p-4 rounded-2xl border-2 transition-all text-left space-y-2",
                       tempType === 'banner' 
@@ -361,7 +350,6 @@ export const AdminSubscription: React.FC = () => {
                             <button 
                               onClick={() => setTempLogo(undefined)}
                               className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600 transition-colors"
-                              disabled={!isSubscribed}
                             >
                               <X className="w-3 h-3" />
                             </button>
@@ -381,8 +369,7 @@ export const AdminSubscription: React.FC = () => {
                           : '가로가 긴 고해상도 이미지 권장 (1200x400)'}
                       </p>
                       <label className={cn(
-                        "inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer",
-                        isSubscribed ? "bg-white border border-gray-300 hover:bg-gray-50 shadow-sm" : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                        "inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer bg-white border border-gray-300 hover:bg-gray-50 shadow-sm"
                       )}>
                         파일 선택
                         <input 
@@ -390,7 +377,6 @@ export const AdminSubscription: React.FC = () => {
                           className="hidden" 
                           accept="image/*" 
                           onChange={(e) => handleLogoChange(e.target.files?.[0] || null)}
-                          disabled={!isSubscribed}
                         />
                       </label>
                     </div>
@@ -404,7 +390,6 @@ export const AdminSubscription: React.FC = () => {
                           <button
                             key={color}
                             onClick={() => setTempColor(color)}
-                            disabled={!isSubscribed}
                             className={cn(
                               "w-8 h-8 rounded-full border-2 transition-transform active:scale-90",
                               tempColor === color ? "border-white ring-2 ring-blue-500 scale-110" : "border-transparent"
@@ -417,7 +402,6 @@ export const AdminSubscription: React.FC = () => {
                             type="color" 
                             value={tempColor}
                             onChange={(e) => setTempColor(e.target.value)}
-                            disabled={!isSubscribed}
                             className="w-8 h-8 rounded-full border-none p-0 overflow-hidden cursor-pointer"
                           />
                         </div>
@@ -433,7 +417,6 @@ export const AdminSubscription: React.FC = () => {
                             size="sm" 
                             className="gap-2"
                             onClick={() => setIsCropModalOpen(true)}
-                            disabled={!isSubscribed}
                           >
                             <Crop className="w-3.5 h-3.5" /> 노출 영역 조정
                           </Button>
@@ -448,7 +431,6 @@ export const AdminSubscription: React.FC = () => {
                       placeholder="예: 우리 회사 방문을 환영합니다"
                       value={tempTitle}
                       onChange={(e) => setTempTitle(e.target.value)}
-                      disabled={!isSubscribed}
                     />
                   </div>
                 </div>
@@ -457,7 +439,7 @@ export const AdminSubscription: React.FC = () => {
                   <Button 
                     className="w-full h-12 gap-2" 
                     onClick={handleSaveBranding} 
-                    disabled={!isSubscribed || saving}
+                    disabled={saving}
                   >
                     <Save className="w-4 h-4" /> 설정 저장하기
                   </Button>
@@ -467,8 +449,25 @@ export const AdminSubscription: React.FC = () => {
           </div>
 
           <Card className="p-8 bg-gray-100/50 border-none sticky top-8">
-            <h2 className="text-lg font-bold mb-6">실시간 미리보기</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-bold">실시간 미리보기</h2>
+              <div className="flex gap-1">
+                <div className="w-2 h-2 rounded-full bg-red-400"></div>
+                <div className="w-2 h-2 rounded-full bg-amber-400"></div>
+                <div className="w-2 h-2 rounded-full bg-green-400"></div>
+              </div>
+            </div>
+            
             <div className="bg-white rounded-[2.5rem] shadow-2xl border-8 border-gray-900 overflow-hidden max-w-[280px] mx-auto aspect-[9/19] flex flex-col relative scale-90 origin-top">
+              {/* Status Bar */}
+              <div className="h-6 w-full flex justify-between items-center px-6 pt-2">
+                <span className="text-[10px] font-bold">9:41</span>
+                <div className="flex gap-1">
+                  <div className="w-3 h-2 bg-black rounded-[1px]"></div>
+                  <div className="w-2 h-2 bg-black rounded-full"></div>
+                </div>
+              </div>
+
               <div className="flex-1 flex flex-col overflow-y-auto">
                 {tempType === 'banner' && tempLogo ? (
                   <div className="w-full h-40 flex-shrink-0 relative overflow-hidden">
@@ -480,6 +479,7 @@ export const AdminSubscription: React.FC = () => {
                         backgroundSize: `${10000 / (tempBannerCrop?.width || 100)}% ${10000 / (tempBannerCrop?.height || 100)}%`
                       }}
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-white/20 to-transparent"></div>
                   </div>
                 ) : null}
 
@@ -500,8 +500,26 @@ export const AdminSubscription: React.FC = () => {
                     </div>
                   )}
                   <h1 className="text-xl font-bold text-gray-900 leading-tight">{tempTitle || '디지털 방문일지'}</h1>
+                  <p className="text-[11px] text-gray-500 mt-2 font-medium">방문 목적을 선택해 주세요.</p>
                 </header>
+
+                <div className="px-6 pb-8 space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="p-4 rounded-2xl border border-gray-100 bg-white shadow-sm flex items-center justify-between">
+                      <div className="space-y-1.5">
+                        <div className="h-2.5 w-20 bg-gray-100 rounded-full"></div>
+                        <div className="h-2 w-32 bg-gray-50 rounded-full"></div>
+                      </div>
+                      <div className="w-5 h-5 bg-gray-50 rounded-full flex items-center justify-center text-gray-300">
+                        <ImageIcon className="w-3 h-3" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
+              
+              {/* Home Indicator */}
+              <div className="h-1 w-24 bg-gray-200 rounded-full absolute bottom-2 left-1/2 -translate-x-1/2"></div>
             </div>
           </Card>
         </div>
@@ -513,7 +531,6 @@ export const AdminSubscription: React.FC = () => {
                 <div className="flex items-center gap-2 mb-2">
                   <Bell className="w-5 h-5 text-blue-600" />
                   <h2 className="text-lg font-bold">알림 기능 설정</h2>
-                  {!isSubscribed && <Lock className="w-4 h-4 text-gray-400" />}
                 </div>
 
                 <div className="space-y-4">
@@ -554,7 +571,6 @@ export const AdminSubscription: React.FC = () => {
                             className="sr-only peer"
                             checked={notificationEnabled}
                             onChange={(e) => setNotificationEnabled(e.target.checked)}
-                            disabled={!isSubscribed}
                           />
                           <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                         </label>
@@ -631,7 +647,7 @@ export const AdminSubscription: React.FC = () => {
                       <Button 
                         className="w-full h-12 gap-2" 
                         onClick={handleSaveNotification} 
-                        disabled={!isSubscribed || saving}
+                        disabled={saving}
                         isLoading={saving}
                       >
                         <Save className="w-4 h-4" /> 알림 설정 저장
@@ -644,8 +660,25 @@ export const AdminSubscription: React.FC = () => {
           </div>
 
           <Card className="p-8 bg-gray-100/50 border-none sticky top-8">
-            <h2 className="text-lg font-bold mb-6">알림 미리보기</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-bold">알림 미리보기</h2>
+              <div className="flex gap-1">
+                <div className="w-2 h-2 rounded-full bg-red-400"></div>
+                <div className="w-2 h-2 rounded-full bg-amber-400"></div>
+                <div className="w-2 h-2 rounded-full bg-green-400"></div>
+              </div>
+            </div>
+
             <div className="bg-white rounded-[2.5rem] shadow-2xl border-8 border-gray-900 overflow-hidden max-w-[280px] mx-auto aspect-[9/19] flex flex-col relative scale-90 origin-top">
+              {/* Status Bar */}
+              <div className="h-6 w-full flex justify-between items-center px-6 pt-2">
+                <span className="text-[10px] font-bold">9:41</span>
+                <div className="flex gap-1">
+                  <div className="w-3 h-2 bg-black rounded-[1px]"></div>
+                  <div className="w-2 h-2 bg-black rounded-full"></div>
+                </div>
+              </div>
+
               <div className="flex-1 flex flex-col items-center justify-center px-6">
                 <AnimatePresence mode="wait">
                   {notificationEnabled ? (
@@ -680,12 +713,15 @@ export const AdminSubscription: React.FC = () => {
                   )}
                 </AnimatePresence>
               </div>
+
+              {/* Home Indicator */}
+              <div className="h-1 w-24 bg-gray-200 rounded-full absolute bottom-2 left-1/2 -translate-x-1/2"></div>
             </div>
           </Card>
         </div>
       )}
 
-      {/* Crop Modal remains the same */}
+      {/* Crop Modal */}
       <AnimatePresence>
         {isCropModalOpen && tempLogo && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
