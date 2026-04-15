@@ -6,7 +6,7 @@ import { VisitPurpose, AdminUser } from '../types';
 import { Card, Button, Input, Label } from '../components/ui/Button';
 import { DynamicForm } from '../components/DynamicForm';
 import { SignaturePad } from '../components/SignaturePad';
-import { ChevronLeft, Loader2, CheckCircle2, Download, Share2, Bell, X, Plus, ZoomIn, ClipboardList } from 'lucide-react';
+import { ChevronLeft, Loader2, CheckCircle2, Download, Share2, Bell, X, Plus, ZoomIn, ClipboardList, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { domToPng } from 'modern-screenshot';
@@ -30,6 +30,8 @@ export const VisitorForm: React.FC = () => {
   const [showZoomModal, setShowZoomModal] = useState(false);
   const [zoomScale, setZoomScale] = useState(1);
 
+  const [error, setError] = useState<string | null>(null);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -39,6 +41,7 @@ export const VisitorForm: React.FC = () => {
     const cleanPurposeId = purposeId.trim();
     
     setLoading(true);
+    setError(null);
     
     // 1. Fetch Admin Data once
     const fetchAdmin = async () => {
@@ -47,7 +50,7 @@ export const VisitorForm: React.FC = () => {
         if (adminDoc.exists()) {
           setAdminData(adminDoc.data() as AdminUser);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error fetching admin:', err);
       }
     };
@@ -57,22 +60,28 @@ export const VisitorForm: React.FC = () => {
     // 2. Use onSnapshot for purpose to be more resilient on mobile
     const docRef = doc(db, 'purposes', cleanPurposeId);
     const unsubscribe = onSnapshot(docRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.data() as VisitPurpose;
-        // Verify this purpose belongs to the admin in the URL
-        if (data.ownerId === cleanAdminId) {
-          setPurpose({ id: snapshot.id, ...data });
+      try {
+        if (snapshot.exists()) {
+          const data = snapshot.data() as VisitPurpose;
+          // Verify this purpose belongs to the admin in the URL
+          if (data.ownerId === cleanAdminId) {
+            setPurpose({ id: snapshot.id, ...data });
+          } else {
+            console.warn('Purpose owner mismatch:', data.ownerId, 'expected:', cleanAdminId);
+            setError('권한이 없는 접근입니다.');
+          }
         } else {
-          console.warn('Purpose owner mismatch:', data.ownerId, 'expected:', cleanAdminId);
-          navigate(`/s/${cleanAdminId}`);
+          console.warn('Purpose not found:', cleanPurposeId);
+          setError('해당 방문 목적을 찾을 수 없습니다.');
         }
-      } else {
-        console.warn('Purpose not found:', cleanPurposeId);
-        navigate(`/s/${cleanAdminId}`);
+      } catch (err: any) {
+        console.error('Data parsing error:', err);
+        setError('데이터를 처리하는 중 오류가 발생했습니다: ' + err.message);
       }
       setLoading(false);
     }, (err) => {
       console.error('Firestore purpose snapshot error:', err);
+      setError('서버와 연결할 수 없습니다. 네트워크 상태를 확인해 주세요. (' + err.message + ')');
       setLoading(false);
     });
 
@@ -200,6 +209,21 @@ export const VisitorForm: React.FC = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-6">
+          <AlertCircle className="w-10 h-10 text-red-500" />
+        </div>
+        <h1 className="text-xl font-bold text-gray-900 mb-2">접속 오류</h1>
+        <p className="text-gray-500 mb-8 whitespace-pre-wrap">{error}</p>
+        <Button className="w-full max-w-xs" onClick={() => navigate(`/s/${adminId}`)}>
+          돌아가기
+        </Button>
+      </div>
+    );
+  }
+
   if (submitted && submittedLog) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center py-12 px-6">
@@ -309,30 +333,35 @@ export const VisitorForm: React.FC = () => {
       </header>
 
       <main className="max-w-md mx-auto px-4 mt-6">
-        <form onSubmit={handleInitialSubmit} className="space-y-6">
-          <Card className="p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-              <span className="w-1.5 h-6 bg-blue-600 rounded-full" />
-              방문 정보 입력
-            </h2>
-            
-            {purpose && (
+        {!purpose ? (
+          <div className="flex flex-col items-center justify-center p-10 text-center">
+            <Loader2 className="w-8 h-8 text-blue-600 animate-spin mb-4" />
+            <p className="text-gray-500 text-sm">정보를 불러오는 중입니다...<br/>잠시만 기다려 주세요.</p>
+          </div>
+        ) : (
+          <form onSubmit={handleInitialSubmit} className="space-y-6">
+            <Card className="p-6">
+              <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span className="w-1.5 h-6 bg-blue-600 rounded-full" />
+                방문 정보 입력
+              </h2>
+              
               <DynamicForm
                 fields={purpose.fields}
                 values={formData}
                 onChange={handleFieldChange}
                 errors={errors}
               />
-            )}
-          </Card>
+            </Card>
 
-          <Button
-            type="submit"
-            className="w-full h-14 text-lg font-bold shadow-lg"
-          >
-            방문일지 제출하기
-          </Button>
-        </form>
+            <Button
+              type="submit"
+              className="w-full h-14 text-lg font-bold shadow-lg"
+            >
+              방문일지 제출하기
+            </Button>
+          </form>
+        )}
       </main>
 
       {/* Privacy Modal */}
