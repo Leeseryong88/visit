@@ -47,4 +47,7 @@ export interface AdminUser {
   qrTitle?: string;
   brandingLogo?: string;
   brandingTitle?: string;
+  brandingType?: 'icon' | 'banner';
+  brandingColor?: string;
+  brandingBannerPosition?: number; // 0 to 100 representing percentage from top
 }

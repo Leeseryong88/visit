@@ -175,18 +175,38 @@ export const VisitorHome: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center p-6 relative">
-      <header className="w-full max-w-md text-center mb-10 mt-8">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl shadow-lg mb-4 overflow-hidden">
-          {adminData?.brandingLogo ? (
-            <img src={adminData.brandingLogo} alt="Logo" className="w-full h-full object-contain p-2" />
-          ) : (
-            <ClipboardList className="w-8 h-8 text-white" />
-          )}
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center relative">
+      {adminData?.brandingType === 'banner' && adminData?.brandingLogo ? (
+        <div className="w-full h-48 md:h-64 flex-shrink-0 relative overflow-hidden shadow-md">
+          <img 
+            src={adminData.brandingLogo} 
+            className="w-full h-full object-cover" 
+            style={{ objectPosition: `center ${adminData.brandingBannerPosition ?? 50}%` }}
+            alt="Banner" 
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">{adminData?.brandingTitle || '디지털 방문일지'}</h1>
-        <p className="text-gray-500 mt-2">방문 목적을 선택해 주세요.</p>
-        <p className="text-[8px] text-gray-300 mt-1">v1.0.2</p>
+      ) : null}
+
+      <header className={cn(
+        "w-full max-w-md text-center mb-10",
+        adminData?.brandingType === 'banner' ? "mt-8 px-6" : "mt-12 px-6"
+      )}>
+        {(!adminData?.brandingType || adminData.brandingType === 'icon') && (
+          <div 
+            className="inline-flex items-center justify-center w-20 h-20 rounded-3xl shadow-xl mb-6 overflow-hidden transition-colors"
+            style={{ backgroundColor: adminData?.brandingColor || '#2563eb' }}
+          >
+            {adminData?.brandingLogo ? (
+              <img src={adminData.brandingLogo} alt="Logo" className="w-full h-full object-contain p-3" />
+            ) : (
+              <ClipboardList className="w-10 h-10 text-white" />
+            )}
+          </div>
+        )}
+        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">{adminData?.brandingTitle || '디지털 방문일지'}</h1>
+        <p className="text-gray-500 mt-3 font-medium">방문 목적을 선택해 주세요.</p>
+        <p className="text-[10px] text-gray-300 mt-2 tracking-widest">v1.1.0</p>
       </header>
 
       <main className="w-full max-w-md space-y-4">

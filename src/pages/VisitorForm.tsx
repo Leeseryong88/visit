@@ -250,18 +250,32 @@ export const VisitorForm: React.FC = () => {
         >
           <div id="submission-summary" className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100" style={{ backgroundColor: '#ffffff', color: '#111827' }}>
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl shadow-lg mb-6 overflow-hidden" style={{ backgroundColor: '#2563eb' }}>
-                {adminData?.brandingLogo ? (
+              {adminData?.brandingType === 'banner' && adminData?.brandingLogo ? (
+                <div className="w-full h-32 rounded-2xl overflow-hidden mb-6 shadow-inner">
                   <img 
                     src={adminData.brandingLogo} 
-                    alt="Logo" 
-                    className="w-full h-full object-contain p-2"
-                    crossOrigin="anonymous"
+                    alt="Banner" 
+                    className="w-full h-full object-cover" 
+                    style={{ objectPosition: `center ${adminData.brandingBannerPosition ?? 50}%` }}
                   />
-                ) : (
-                  <ClipboardList className="w-8 h-8 text-white" />
-                )}
-              </div>
+                </div>
+              ) : (
+                <div 
+                  className="inline-flex items-center justify-center w-16 h-16 rounded-2xl shadow-lg mb-6 overflow-hidden" 
+                  style={{ backgroundColor: adminData?.brandingColor || '#2563eb' }}
+                >
+                  {adminData?.brandingLogo ? (
+                    <img 
+                      src={adminData.brandingLogo} 
+                      alt="Logo" 
+                      className="w-full h-full object-contain p-2"
+                      crossOrigin="anonymous"
+                    />
+                  ) : (
+                    <ClipboardList className="w-8 h-8 text-white" />
+                  )}
+                </div>
+              )}
               <h2 className="text-2xl font-bold" style={{ color: '#111827' }}>{adminData?.brandingTitle || '디지털 방문일지'}</h2>
               <p className="text-sm font-medium mt-1" style={{ color: '#16a34a' }}>방문일지가 성공적으로 접수되었습니다.</p>
             </div>
@@ -336,9 +350,12 @@ export const VisitorForm: React.FC = () => {
             <ChevronLeft className="w-6 h-6 text-gray-600" />
           </button>
           <div className="flex items-center gap-3 truncate">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden">
+            <div 
+              className="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden"
+              style={{ backgroundColor: adminData?.brandingType === 'banner' ? 'transparent' : (adminData?.brandingColor || '#2563eb') }}
+            >
               {adminData?.brandingLogo ? (
-                <img src={adminData.brandingLogo} alt="Logo" className="w-full h-full object-contain p-1" />
+                <img src={adminData.brandingLogo} alt="Logo" className={cn("w-full h-full", adminData.brandingType === 'banner' ? "object-cover" : "object-contain p-1")} />
               ) : (
                 <ClipboardList className="w-4 h-4 text-white" />
               )}
