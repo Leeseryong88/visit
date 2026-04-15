@@ -44,8 +44,6 @@ export const VisitorHome: React.FC = () => {
           setAdminData(adminDoc.data() as AdminUser);
         } else {
           console.error('Admin not found in Firestore:', cleanAdminId);
-          // Don't set error yet, maybe purposes will load? 
-          // Actually, if admin doesn't exist, it's a problem.
           setError('등록되지 않은 관리자 계정입니다.');
         }
       } catch (err) {
@@ -82,6 +80,13 @@ export const VisitorHome: React.FC = () => {
 
     return () => unsubscribe();
   }, [adminId]);
+
+  const handleNavigateToForm = (purposeId: string) => {
+    const cleanAdminId = adminId?.trim();
+    if (cleanAdminId) {
+      navigate(`/s/${cleanAdminId}/visit/${purposeId}`);
+    }
+  };
 
   const handleCheckLog = async () => {
     if (!adminId || !checkData.name || !checkData.contact || !checkData.date) return;
@@ -202,7 +207,7 @@ export const VisitorHome: React.FC = () => {
               transition={{ delay: index * 0.1 }}
             >
               <button
-                onClick={() => navigate(`/s/${adminId}/visit/${purpose.id}`)}
+                onClick={() => handleNavigateToForm(purpose.id)}
                 className="w-full text-left group"
               >
                 <Card className="p-5 flex items-center justify-between hover:border-blue-500 hover:shadow-md transition-all active:scale-[0.98]">

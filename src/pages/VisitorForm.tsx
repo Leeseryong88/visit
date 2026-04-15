@@ -33,36 +33,50 @@ export const VisitorForm: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!purposeId || !adminId) return;
+    if (!purposeId || !adminId) return;
+    
+    const cleanAdminId = adminId.trim();
+    const cleanPurposeId = purposeId.trim();
+    
+    setLoading(true);
+    
+    // 1. Fetch Admin Data once
+    const fetchAdmin = async () => {
       try {
-        // Fetch Admin Data
-        const adminDoc = await getDoc(doc(db, 'users', adminId));
+        const adminDoc = await getDoc(doc(db, 'users', cleanAdminId));
         if (adminDoc.exists()) {
           setAdminData(adminDoc.data() as AdminUser);
         }
-
-        const docRef = doc(db, 'purposes', purposeId);
-        const snapshot = await getDoc(docRef);
-        if (snapshot.exists()) {
-          const data = snapshot.data() as VisitPurpose;
-          // Verify this purpose belongs to the admin in the URL
-          if (data.ownerId === adminId) {
-            setPurpose({ id: snapshot.id, ...data });
-          } else {
-            navigate(`/s/${adminId}`);
-          }
-        } else {
-          navigate(`/s/${adminId}`);
-        }
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching admin:', err);
       }
     };
+    
+    fetchAdmin();
 
-    fetchData();
+    // 2. Use onSnapshot for purpose to be more resilient on mobile
+    const docRef = doc(db, 'purposes', cleanPurposeId);
+    const unsubscribe = onSnapshot(docRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data() as VisitPurpose;
+        // Verify this purpose belongs to the admin in the URL
+        if (data.ownerId === cleanAdminId) {
+          setPurpose({ id: snapshot.id, ...data });
+        } else {
+          console.warn('Purpose owner mismatch:', data.ownerId, 'expected:', cleanAdminId);
+          navigate(`/s/${cleanAdminId}`);
+        }
+      } else {
+        console.warn('Purpose not found:', cleanPurposeId);
+        navigate(`/s/${cleanAdminId}`);
+      }
+      setLoading(false);
+    }, (err) => {
+      console.error('Firestore purpose snapshot error:', err);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, [purposeId, adminId, navigate]);
 
   const handleFieldChange = (id: string, value: any) => {

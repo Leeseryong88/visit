@@ -2,10 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { 
   signInWithRedirect, 
   getRedirectResult, 
+  signInWithPopup,
   GoogleAuthProvider, 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword,
-  updateProfile
+  updateProfile,
+  browserSessionPersistence,
+  setPersistence
 } from 'firebase/auth';
 import { auth, db } from '../firebase';
 import { doc, getDoc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
@@ -29,13 +32,21 @@ export const AdminLogin: React.FC = () => {
   useEffect(() => {
     const checkRedirect = async () => {
       try {
+        // First check if user is already logged in (persistence)
+        if (auth.currentUser) {
+          await handleUserLogin(auth.currentUser);
+          return;
+        }
+
         const result = await getRedirectResult(auth);
-        if (result) {
+        if (result?.user) {
           await handleUserLogin(result.user);
         }
       } catch (err: any) {
         console.error('Redirect result error:', err);
-        setError('로그인 처리 중 오류가 발생했습니다.');
+        if (err.code !== 'auth/cancelled-popup-request') {
+          setError('로그인 처리 중 오류가 발생했습니다. 브라우저 설정을 확인해 주세요.');
+        }
       } finally {
         setCheckingAuth(false);
       }
@@ -108,10 +119,24 @@ export const AdminLogin: React.FC = () => {
     setError(null);
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithRedirect(auth, provider);
+      // Try popup first as it's much more reliable and avoids redirect loops
+      try {
+        const result = await signInWithPopup(auth, provider);
+        if (result.user) {
+          await handleUserLogin(result.user);
+        }
+      } catch (popupErr: any) {
+        // If popup is blocked or fails, fall back to redirect ONLY IF it's not an in-app browser
+        // In-app browsers (Kakao, etc.) really hate popups.
+        if (popupErr.code === 'auth/popup-blocked' || popupErr.code === 'auth/cancelled-popup-request') {
+          await signInWithRedirect(auth, provider);
+        } else {
+          throw popupErr;
+        }
+      }
     } catch (err: any) {
       console.error('Login error:', err);
-      setError('로그인 중 오류가 발생했습니다.');
+      setError('로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
       setLoading(false);
     }
   };
