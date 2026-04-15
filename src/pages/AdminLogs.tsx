@@ -2,33 +2,46 @@ import React, { useEffect, useState } from 'react';
 import { collection, query, getDocs, orderBy, where, Timestamp, limit } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 import { VisitorLog } from '../types';
-import { Card, Button, Input } from '../components/ui/Button';
+import { Card, Button, Input, Label } from '../components/ui/Button';
 import { Search, Filter, Download, Eye, X, Loader2, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'motion/react';
+import { cn } from '../lib/utils';
 
 export const AdminLogs: React.FC = () => {
   const [logs, setLogs] = useState<VisitorLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLog, setSelectedLog] = useState<VisitorLog | null>(null);
+  
+  // Date filter states
+  const [startDate, setStartDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   useEffect(() => {
     fetchLogs();
   }, []);
 
-  const fetchLogs = async () => {
+  const fetchLogs = async (sDate = startDate, eDate = endDate) => {
     const user = auth.currentUser;
     if (!user) return;
 
     setLoading(true);
     try {
+      const start = new Date(sDate);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(eDate);
+      end.setHours(23, 59, 59, 999);
+
       const q = query(
         collection(db, 'logs'),
         where('ownerId', '==', user.uid),
+        where('visitDate', '>=', Timestamp.fromDate(start)),
+        where('visitDate', '<=', Timestamp.fromDate(end)),
         orderBy('visitDate', 'desc'),
-        limit(100)
+        limit(500)
       );
       const snapshot = await getDocs(q);
       setLogs(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as VisitorLog)));
@@ -37,6 +50,19 @@ export const AdminLogs: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleApplyFilter = () => {
+    fetchLogs();
+    setIsFilterOpen(false);
+  };
+
+  const handleResetFilter = () => {
+    const today = format(new Date(), 'yyyy-MM-dd');
+    setStartDate(today);
+    setEndDate(today);
+    fetchLogs(today, today);
+    setIsFilterOpen(false);
   };
 
   const filteredLogs = logs.filter(log => 
@@ -96,10 +122,60 @@ export const AdminLogs: React.FC = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Button variant="outline" className="gap-2">
-            <Calendar className="w-4 h-4" /> 기간 선택
+          <Button 
+            variant="outline" 
+            className={cn(
+              "gap-2 min-w-[200px] justify-start font-normal",
+              isFilterOpen && "border-blue-500 ring-1 ring-blue-500"
+            )}
+            onClick={() => setIsFilterOpen(!isFilterOpen)}
+          >
+            <Calendar className="w-4 h-4 text-blue-600" />
+            <span className="flex-1 text-left">
+              {startDate === endDate ? startDate : `${startDate} ~ ${endDate}`}
+            </span>
           </Button>
         </div>
+
+        <AnimatePresence>
+          {isFilterOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="pt-4 mt-4 border-t border-gray-100 flex flex-col md:flex-row items-end gap-4">
+                <div className="flex-1 grid grid-cols-2 gap-4 w-full">
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] uppercase font-bold text-gray-400">시작일</Label>
+                    <Input 
+                      type="date" 
+                      value={startDate} 
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="h-10"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] uppercase font-bold text-gray-400">종료일</Label>
+                    <Input 
+                      type="date" 
+                      value={endDate} 
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="h-10"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2 w-full md:w-auto">
+                  <Button variant="ghost" onClick={handleResetFilter} className="flex-1 md:flex-none">초기화</Button>
+                  <Button onClick={handleApplyFilter} className="flex-1 md:flex-none gap-2">
+                    <Filter className="w-4 h-4" /> 필터 적용
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </Card>
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
