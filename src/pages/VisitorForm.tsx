@@ -282,6 +282,7 @@ export const VisitorForm: React.FC = () => {
                       alt="Banner" 
                       className="w-full h-full object-cover" 
                       style={{ objectPosition: `center ${adminData.brandingBannerPosition ?? 50}%` }}
+                      crossOrigin="anonymous"
                     />
                   )}
                 </div>
@@ -381,7 +382,7 @@ export const VisitorForm: React.FC = () => {
               style={{ backgroundColor: adminData?.brandingType === 'banner' ? 'transparent' : (adminData?.brandingColor || '#2563eb') }}
             >
               {adminData?.brandingLogo ? (
-                <img src={adminData.brandingLogo} alt="Logo" className={cn("w-full h-full", adminData.brandingType === 'banner' ? "object-cover" : "object-contain p-1")} />
+                <img src={adminData.brandingLogo} alt="Logo" className={cn("w-full h-full", adminData.brandingType === 'banner' ? "object-cover" : "object-contain p-1")} crossOrigin="anonymous" />
               ) : (
                 <ClipboardList className="w-4 h-4 text-white" />
               )}
@@ -493,6 +494,7 @@ export const VisitorForm: React.FC = () => {
                         alt="Admin Notification" 
                         className="w-full h-auto"
                         referrerPolicy="no-referrer"
+                        crossOrigin="anonymous"
                       />
                     </div>
                     <p className="text-[11px] text-gray-400 text-center">이미지를 클릭하면 기기에 저장됩니다.</p>

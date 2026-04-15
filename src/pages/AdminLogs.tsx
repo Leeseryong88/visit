@@ -314,12 +314,13 @@ export const AdminLogs: React.FC = () => {
                       <div key={key} className="flex flex-col space-y-1 py-2 border-b border-gray-50 last:border-0">
                         <span className="text-xs text-gray-500">{key}</span>
                         <div className="font-medium text-gray-900">
-                          {typeof value === 'string' && value.startsWith('data:image/') ? (
+                          {typeof value === 'string' && value.startsWith('http') && (value.includes('firebasestorage') || value.startsWith('data:image/')) ? (
                             <img 
                               src={value} 
                               alt={key} 
                               className="h-32 w-32 object-cover rounded-lg border border-gray-200 mt-1 cursor-zoom-in"
                               onClick={() => window.open(value, '_blank')}
+                              crossOrigin="anonymous"
                             />
                           ) : Array.isArray(value) ? (
                             value.join(', ')
@@ -335,7 +336,7 @@ export const AdminLogs: React.FC = () => {
                 <div className="pt-6 border-t border-gray-100">
                   <p className="text-xs font-bold text-gray-400 uppercase mb-4">전자서명</p>
                   <div className="bg-gray-50 rounded-xl border border-gray-200 p-4 flex justify-center">
-                    <img src={selectedLog.signature} alt="Signature" className="max-h-32 object-contain" />
+                    <img src={selectedLog.signature} alt="Signature" className="max-h-32 object-contain" crossOrigin="anonymous" />
                   </div>
                 </div>
               </div>

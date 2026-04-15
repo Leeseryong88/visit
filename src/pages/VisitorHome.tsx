@@ -194,6 +194,7 @@ export const VisitorHome: React.FC = () => {
               className="w-full h-full object-cover" 
               style={{ objectPosition: `center ${adminData.brandingBannerPosition ?? 50}%` }}
               alt="Banner" 
+              crossOrigin="anonymous"
             />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
@@ -210,7 +211,7 @@ export const VisitorHome: React.FC = () => {
             style={{ backgroundColor: adminData?.brandingColor || '#2563eb' }}
           >
             {adminData?.brandingLogo ? (
-              <img src={adminData.brandingLogo} alt="Logo" className="w-full h-full object-contain p-3" />
+              <img src={adminData.brandingLogo} alt="Logo" className="w-full h-full object-contain p-3" crossOrigin="anonymous" />
             ) : (
               <ClipboardList className="w-10 h-10 text-white" />
             )}
