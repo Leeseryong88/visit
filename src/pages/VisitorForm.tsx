@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, getDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, addDoc, collection, serverTimestamp, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { VisitPurpose, AdminUser } from '../types';
 import { Card, Button, Input, Label } from '../components/ui/Button';
