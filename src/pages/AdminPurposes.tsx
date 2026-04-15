@@ -324,7 +324,6 @@ export const AdminPurposes: React.FC = () => {
                       </div>
                     ))}
                   </div>
-                  </div>
                 </div>
               </div>
 
