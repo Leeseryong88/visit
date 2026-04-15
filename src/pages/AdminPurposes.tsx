@@ -60,6 +60,7 @@ export const AdminPurposes: React.FC = () => {
         name: '',
         description: '',
         isActive: true,
+        notificationType: 'image',
         fields: [
           { id: 'name', label: '방문자 성함', type: 'text', required: true },
           { id: 'contact', label: '연락처', type: 'tel', required: true },
@@ -390,34 +391,86 @@ export const AdminPurposes: React.FC = () => {
                     </div>
 
                     {editingPurpose?.notificationEnabled && isAdminSubscribed && (
-                      <div className="space-y-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
-                        <p className="text-xs text-blue-600">제출 전 방문객에게 보여줄 이미지 알림을 설정하세요.</p>
-                        <div className="flex items-center gap-4">
-                          <label className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-blue-200 rounded-lg p-4 bg-white hover:bg-blue-50 cursor-pointer transition-colors">
-                            {editingPurpose.notificationImage ? (
-                              <div className="relative w-full aspect-video">
-                                <img src={editingPurpose.notificationImage} className="w-full h-full object-cover rounded-lg" alt="Notification" />
-                                <button 
-                                  onClick={(e) => { e.preventDefault(); setEditingPurpose({ ...editingPurpose, notificationImage: undefined }); }}
-                                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
-                                >
-                                  <X className="w-3 h-3" />
-                                </button>
-                              </div>
-                            ) : (
-                              <>
-                                <ImageIcon className="w-6 h-6 text-blue-400 mb-2" />
-                                <span className="text-xs text-blue-500">알림 이미지 업로드</span>
-                              </>
-                            )}
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={(e) => handleNotificationImageChange(e.target.files?.[0] || null)}
-                            />
-                          </label>
+                      <div className="space-y-6 p-6 bg-blue-50 rounded-xl border border-blue-100">
+                        <div className="space-y-3">
+                          <Label className="text-xs text-blue-600 font-bold uppercase tracking-wider">알림 유형</Label>
+                          <div className="flex gap-4">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="radio"
+                                name="notificationType"
+                                checked={(editingPurpose.notificationType || 'image') === 'text'}
+                                onChange={() => setEditingPurpose({ ...editingPurpose, notificationType: 'text' })}
+                                className="w-4 h-4 text-blue-600"
+                              />
+                              <span className="text-sm font-medium text-gray-700">문구만</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="radio"
+                                name="notificationType"
+                                checked={(editingPurpose.notificationType || 'image') === 'image'}
+                                onChange={() => setEditingPurpose({ ...editingPurpose, notificationType: 'image' })}
+                                className="w-4 h-4 text-blue-600"
+                              />
+                              <span className="text-sm font-medium text-gray-700">이미지만</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="radio"
+                                name="notificationType"
+                                checked={editingPurpose.notificationType === 'both'}
+                                onChange={() => setEditingPurpose({ ...editingPurpose, notificationType: 'both' })}
+                                className="w-4 h-4 text-blue-600"
+                              />
+                              <span className="text-sm font-medium text-gray-700">둘 다</span>
+                            </label>
+                          </div>
                         </div>
+
+                        {((editingPurpose.notificationType || 'image') === 'text' || editingPurpose.notificationType === 'both') && (
+                          <div className="space-y-2">
+                            <Label className="text-xs text-blue-600 font-bold uppercase tracking-wider">알림 문구</Label>
+                            <textarea
+                              className="w-full min-h-[100px] p-3 rounded-lg border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                              placeholder="방문객에게 보여줄 알림 내용을 입력하세요"
+                              value={editingPurpose.notificationText || ''}
+                              onChange={(e) => setEditingPurpose({ ...editingPurpose, notificationText: e.target.value })}
+                            />
+                          </div>
+                        )}
+
+                        {((editingPurpose.notificationType || 'image') === 'image' || editingPurpose.notificationType === 'both') && (
+                          <div className="space-y-2">
+                            <Label className="text-xs text-blue-600 font-bold uppercase tracking-wider">알림 이미지</Label>
+                            <div className="flex items-center gap-4">
+                              <label className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-blue-200 rounded-lg p-4 bg-white hover:bg-blue-50 cursor-pointer transition-colors">
+                                {editingPurpose.notificationImage ? (
+                                  <div className="relative w-full aspect-video max-h-[200px]">
+                                    <img src={editingPurpose.notificationImage} className="w-full h-full object-contain rounded-lg" alt="Notification" />
+                                    <button 
+                                      onClick={(e) => { e.preventDefault(); setEditingPurpose({ ...editingPurpose, notificationImage: undefined }); }}
+                                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600"
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <ImageIcon className="w-6 h-6 text-blue-400 mb-2" />
+                                    <span className="text-xs text-blue-500">알림 이미지 업로드</span>
+                                  </>
+                                )}
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) => handleNotificationImageChange(e.target.files?.[0] || null)}
+                                />
+                              </label>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

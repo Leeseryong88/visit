@@ -19,6 +19,8 @@ export interface VisitPurpose {
   createdAt: any;
   updatedAt: any;
   notificationEnabled?: boolean;
+  notificationType?: 'text' | 'image' | 'both';
+  notificationText?: string;
   notificationImage?: string;
 }
 

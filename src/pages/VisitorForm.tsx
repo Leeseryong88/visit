@@ -121,8 +121,17 @@ export const VisitorForm: React.FC = () => {
 
   const handlePrivacyAgree = () => {
     setShowPrivacyModal(false);
-    if (purpose?.notificationEnabled && purpose.notificationImage) {
-      setShowNotificationModal(true);
+    if (purpose?.notificationEnabled) {
+      const hasContent = 
+        (purpose.notificationType === 'text' && purpose.notificationText) ||
+        (purpose.notificationType === 'image' && purpose.notificationImage) ||
+        (purpose.notificationType === 'both' && (purpose.notificationText || purpose.notificationImage));
+      
+      if (hasContent) {
+        setShowNotificationModal(true);
+      } else {
+        setShowSignatureModal(true);
+      }
     } else {
       setShowSignatureModal(true);
     }
@@ -412,7 +421,7 @@ export const VisitorForm: React.FC = () => {
               <div 
                 className="p-6 space-y-4 cursor-pointer group"
                 onClick={() => {
-                  if (purpose?.notificationImage) {
+                  if (purpose?.notificationImage && (purpose.notificationType === 'image' || purpose.notificationType === 'both')) {
                     setZoomScale(1);
                     setShowZoomModal(true);
                   }
@@ -420,9 +429,18 @@ export const VisitorForm: React.FC = () => {
               >
                 <div className="flex items-center gap-2 text-blue-600 group-hover:text-blue-700 transition-colors">
                   <p className="text-sm font-medium">시설관리자의 알림이 있습니다. 내용을 확인해 주세요.</p>
-                  <ZoomIn className="w-4 h-4" />
+                  {purpose?.notificationImage && (purpose.notificationType === 'image' || purpose.notificationType === 'both') && (
+                    <ZoomIn className="w-4 h-4" />
+                  )}
                 </div>
-                {purpose?.notificationImage && (
+
+                {purpose?.notificationText && (purpose.notificationType === 'text' || purpose.notificationType === 'both') && (
+                  <div className="p-4 bg-blue-50 rounded-xl border border-blue-100 text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                    {purpose.notificationText}
+                  </div>
+                )}
+
+                {purpose?.notificationImage && (purpose.notificationType === 'image' || purpose.notificationType === 'both') && (
                   <div className="rounded-xl overflow-hidden border border-gray-100 shadow-inner">
                     <img 
                       src={purpose.notificationImage} 
