@@ -29,13 +29,15 @@ service cloud.firestore {
     }
 
     match /logs/{logId} {
-      allow read: if isAuthenticated() && (resource.data.ownerId == request.auth.uid || isAdmin());
+      allow read: if (isAuthenticated() && (resource.data.ownerId == request.auth.uid || isAdmin())) || 
+                     (resource.data.visitorName != null && resource.data.visitorContact != null && resource.data.ownerId != null);
       allow create: if true; // Visitors can create logs without auth
       allow update, delete: if isAuthenticated() && (isOwner(resource.data) || isAdmin());
     }
 
     match /users/{userId} {
-      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow get: if true; // Allowed so visitors can see branding info by knowing adminId
+      allow list: if isAuthenticated() && isAdmin();
       allow create: if isAuthenticated() && request.auth.uid == userId;
       allow update: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
     }

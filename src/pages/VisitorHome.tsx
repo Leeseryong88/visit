@@ -90,6 +90,11 @@ export const VisitorHome: React.FC = () => {
 
   const handleCheckLog = async () => {
     if (!adminId || !checkData.name || !checkData.contact || !checkData.date) return;
+    
+    const cleanAdminId = adminId.trim();
+    const cleanName = checkData.name.trim();
+    const cleanContact = checkData.contact.trim();
+
     setChecking(true);
     setCheckError(null);
     setFoundLog(null);
@@ -101,15 +106,11 @@ export const VisitorHome: React.FC = () => {
       endOfDay.setHours(23, 59, 59, 999);
 
       // We need to query by ownerId, name, and contact. 
-      // Firestore doesn't support range filters on one field and equality on others without composite indexes.
-      // But here we have equality on ownerId, name, contact and range on visitDate.
-      // This requires a composite index. To avoid index issues for now, let's fetch by name/contact and filter date in memory if needed,
-      // OR ensure the query is correct.
       const q = query(
         collection(db, 'logs'),
-        where('ownerId', '==', adminId),
-        where('visitorName', '==', checkData.name),
-        where('visitorContact', '==', checkData.contact)
+        where('ownerId', '==', cleanAdminId),
+        where('visitorName', '==', cleanName),
+        where('visitorContact', '==', cleanContact)
       );
 
       const snapshot = await getDocs(q);
@@ -121,10 +122,15 @@ export const VisitorHome: React.FC = () => {
         const logs = snapshot.docs
           .map(doc => ({ id: doc.id, ...doc.data() } as any))
           .filter(log => {
-            const logDate = log.visitDate?.toDate();
+            const logDate = log.visitDate?.toDate?.() || (log.visitDate instanceof Date ? log.visitDate : null);
+            if (!logDate) return false;
             return logDate >= startOfDay && logDate <= endOfDay;
           })
-          .sort((a, b) => b.visitDate.toMillis() - a.visitDate.toMillis());
+          .sort((a, b) => {
+            const timeA = a.visitDate?.toMillis?.() || 0;
+            const timeB = b.visitDate?.toMillis?.() || 0;
+            return timeB - timeA;
+          });
 
         if (logs.length === 0) {
           setCheckError('해당 날짜의 방문 기록이 없습니다.');
@@ -132,9 +138,14 @@ export const VisitorHome: React.FC = () => {
           setFoundLog(logs[0]);
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error checking log:', error);
-      setCheckError('조회 중 오류가 발생했습니다.');
+      // Provide more specific error for debugging
+      if (error.code === 'permission-denied') {
+        setCheckError('접근 권한이 없습니다. 시스템 설정을 확인 중입니다.');
+      } else {
+        setCheckError('조회 중 오류가 발생했습니다: ' + (error.message || '알 수 없는 오류'));
+      }
     } finally {
       setChecking(false);
     }
