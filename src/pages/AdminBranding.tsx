@@ -459,22 +459,36 @@ export const AdminBranding: React.FC = () => {
                   
                   {/* Crop Box */}
                   <motion.div
-                    drag
-                    dragMomentum={false}
-                    dragElastic={0}
-                    onDrag={(e, info) => {
+                    onPointerDown={(e) => {
+                      if (e.button !== 0) return; // Only left click
+                      e.stopPropagation();
                       if (!containerRef.current || !tempBannerCrop) return;
+                      
+                      const startX = e.clientX;
+                      const startY = e.clientY;
+                      const startBoxX = tempBannerCrop.x;
+                      const startBoxY = tempBannerCrop.y;
                       const rect = containerRef.current.getBoundingClientRect();
-                      
-                      // Calculate new X and Y based on info.point which is relative to the viewport
-                      // But info.offset is cumulative. Better to use current state + info.delta.
-                      // Actually, let's use the bounding box of the element itself.
-                      const box = (e.target as HTMLElement).getBoundingClientRect();
-                      
-                      const x = Math.max(0, Math.min(100 - tempBannerCrop.width, ((box.left - rect.left) / rect.width) * 100));
-                      const y = Math.max(0, Math.min(100 - tempBannerCrop.height, ((box.top - rect.top) / rect.height) * 100));
-                      
-                      setTempBannerCrop(prev => prev ? { ...prev, x, y } : null);
+
+                      const onPointerMove = (moveEvent: PointerEvent) => {
+                        const deltaX = ((moveEvent.clientX - startX) / rect.width) * 100;
+                        const deltaY = ((moveEvent.clientY - startY) / rect.height) * 100;
+                        
+                        setTempBannerCrop(prev => {
+                          if (!prev) return null;
+                          const newX = Math.max(0, Math.min(100 - prev.width, startBoxX + deltaX));
+                          const newY = Math.max(0, Math.min(100 - prev.height, startBoxY + deltaY));
+                          return { ...prev, x: newX, y: newY };
+                        });
+                      };
+
+                      const onPointerUp = () => {
+                        window.removeEventListener('pointermove', onPointerMove);
+                        window.removeEventListener('pointerup', onPointerUp);
+                      };
+
+                      window.addEventListener('pointermove', onPointerMove);
+                      window.addEventListener('pointerup', onPointerUp);
                     }}
                     style={{
                       position: 'absolute',
