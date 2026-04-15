@@ -6,6 +6,7 @@ import { Card, Button } from '../components/ui/Button';
 import { useNavigate, Link, useParams } from 'react-router-dom';
 import { ClipboardList, ChevronRight, Loader2, Search, Calendar, User, Phone, X, Download, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { cn } from '../lib/utils';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 
