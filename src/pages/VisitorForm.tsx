@@ -461,56 +461,36 @@ export const VisitorForm: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Image Zoom Modal */}
+      {/* Image Zoom Modal - Mobile Optimized */}
       <AnimatePresence>
         {showZoomModal && purpose?.notificationImage && (
           <div 
-            className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-black/95 backdrop-blur-md p-4"
-            onWheel={(e) => {
-              if (e.deltaY < 0) setZoomScale(prev => Math.min(5, prev + 0.1));
-              else setZoomScale(prev => Math.max(0.5, prev - 0.1));
-            }}
+            className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-black/98 backdrop-blur-lg select-none touch-none"
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="relative w-full h-full flex flex-col items-center justify-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="relative w-full h-full flex flex-col"
             >
-              <div className="absolute top-4 right-4 flex gap-2 z-10">
-                <div className="flex bg-white/10 backdrop-blur-md rounded-full p-1 border border-white/20">
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); setZoomScale(prev => Math.max(0.5, prev - 0.25)); }}
-                    className="p-2 hover:bg-white/20 rounded-full text-white transition-colors"
-                    title="축소"
-                  >
-                    <div className="w-5 h-0.5 bg-current rounded-full" />
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setZoomScale(1); }}
-                    className="px-3 flex items-center text-white font-medium text-sm min-w-[60px] justify-center hover:bg-white/10 rounded-md transition-colors"
-                    title="초기화"
-                  >
-                    {Math.round(zoomScale * 100)}%
-                  </button>
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); setZoomScale(prev => Math.min(5, prev + 0.25)); }}
-                    className="p-2 hover:bg-white/20 rounded-full text-white transition-colors"
-                    title="확대"
-                  >
-                    <Plus className="w-5 h-5" />
-                  </button>
+              {/* Top Controls Overlay */}
+              <div className="absolute top-0 left-0 right-0 p-6 flex items-center justify-between z-10 bg-gradient-to-b from-black/60 to-transparent">
+                <div className="flex items-center gap-3">
+                  <div className="w-1.5 h-6 bg-blue-500 rounded-full" />
+                  <p className="text-white font-bold tracking-tight">상세 확인</p>
                 </div>
                 <button 
                   onClick={() => setShowZoomModal(false)}
-                  className="p-3 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white border border-white/20 transition-colors"
+                  className="p-3 bg-white/10 hover:bg-white/20 active:scale-90 backdrop-blur-md rounded-full text-white border border-white/20 transition-all shadow-lg"
+                  aria-label="닫기"
                 >
                   <X className="w-6 h-6" />
                 </button>
               </div>
 
+              {/* Image Canvas */}
               <div 
-                className="w-full h-full overflow-hidden flex items-center justify-center p-4 cursor-grab active:cursor-grabbing"
+                className="flex-1 w-full flex items-center justify-center overflow-hidden relative cursor-grab active:cursor-grabbing"
                 onDoubleClick={() => setZoomScale(1)}
               >
                 <motion.img
@@ -518,18 +498,53 @@ export const VisitorForm: React.FC = () => {
                   alt="Zoomed Notification"
                   animate={{ scale: zoomScale }}
                   transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                  className="max-w-full max-h-full object-contain"
+                  className="max-w-full max-h-full object-contain shadow-2xl"
                   referrerPolicy="no-referrer"
                   drag
-                  dragConstraints={{ left: -1000, right: 1000, top: -1000, bottom: 1000 }}
-                  dragElastic={0.1}
+                  dragConstraints={{ 
+                    left: -window.innerWidth * (zoomScale - 1) / 2 - 100, 
+                    right: window.innerWidth * (zoomScale - 1) / 2 + 100, 
+                    top: -window.innerHeight * (zoomScale - 1) / 2 - 100, 
+                    bottom: window.innerHeight * (zoomScale - 1) / 2 + 100 
+                  }}
+                  dragElastic={0.2}
                 />
               </div>
               
-              <div className="absolute bottom-8 flex flex-col items-center gap-2">
-                <p className="text-white/60 text-sm bg-black/40 px-4 py-2 rounded-full backdrop-blur-sm">
-                  마우스 휠로 확대/축소, 드래그로 이동, 더블 클릭으로 초기화
-                </p>
+              {/* Bottom Controls Overlay */}
+              <div className="absolute bottom-0 left-0 right-0 p-8 flex flex-col items-center gap-6 bg-gradient-to-t from-black/60 to-transparent">
+                {/* Zoom Control Bar - Larger for Mobile */}
+                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-xl rounded-2xl p-2 border border-white/20 shadow-2xl">
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setZoomScale(prev => Math.max(0.5, prev - 0.25)); }}
+                    className="w-12 h-12 flex items-center justify-center hover:bg-white/10 active:bg-white/20 rounded-xl text-white transition-all"
+                    title="축소"
+                  >
+                    <div className="w-5 h-0.5 bg-white rounded-full" />
+                  </button>
+                  
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setZoomScale(1); }}
+                    className="px-6 h-12 flex items-center text-white font-bold text-base min-w-[80px] justify-center hover:bg-white/10 active:bg-white/20 rounded-xl transition-all"
+                    title="초기화"
+                  >
+                    {Math.round(zoomScale * 100)}%
+                  </button>
+                  
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setZoomScale(prev => Math.min(5, prev + 0.25)); }}
+                    className="w-12 h-12 flex items-center justify-center hover:bg-white/10 active:bg-white/20 rounded-xl text-white transition-all"
+                    title="확대"
+                  >
+                    <Plus className="w-6 h-6" />
+                  </button>
+                </div>
+
+                <div className="bg-black/40 backdrop-blur-md px-5 py-2.5 rounded-full border border-white/10 shadow-lg">
+                  <p className="text-white/80 text-[13px] font-medium tracking-tight">
+                    두 손가락으로 핀치하거나 버튼으로 확대/축소 하세요
+                  </p>
+                </div>
               </div>
             </motion.div>
           </div>
