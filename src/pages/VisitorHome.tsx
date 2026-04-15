@@ -178,12 +178,23 @@ export const VisitorHome: React.FC = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col items-center relative">
       {adminData?.brandingType === 'banner' && adminData?.brandingLogo ? (
         <div className="w-full h-48 md:h-64 flex-shrink-0 relative overflow-hidden shadow-md">
-          <img 
-            src={adminData.brandingLogo} 
-            className="w-full h-full object-cover" 
-            style={{ objectPosition: `center ${adminData.brandingBannerPosition ?? 50}%` }}
-            alt="Banner" 
-          />
+          {adminData.brandingBannerCrop ? (
+            <div 
+              className="absolute inset-0 bg-cover bg-no-repeat"
+              style={{ 
+                backgroundImage: `url(${adminData.brandingLogo})`,
+                backgroundPosition: `${adminData.brandingBannerCrop.width === 100 ? 0 : (adminData.brandingBannerCrop.x / (100 - adminData.brandingBannerCrop.width)) * 100}% ${adminData.brandingBannerCrop.height === 100 ? 0 : (adminData.brandingBannerCrop.y / (100 - adminData.brandingBannerCrop.height)) * 100}%`,
+                backgroundSize: `${10000 / adminData.brandingBannerCrop.width}% ${10000 / adminData.brandingBannerCrop.height}%`
+              }}
+            />
+          ) : (
+            <img 
+              src={adminData.brandingLogo} 
+              className="w-full h-full object-cover" 
+              style={{ objectPosition: `center ${adminData.brandingBannerPosition ?? 50}%` }}
+              alt="Banner" 
+            />
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
         </div>
       ) : null}

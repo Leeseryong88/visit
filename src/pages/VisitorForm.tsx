@@ -251,13 +251,24 @@ export const VisitorForm: React.FC = () => {
           <div id="submission-summary" className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100" style={{ backgroundColor: '#ffffff', color: '#111827' }}>
             <div className="text-center mb-8">
               {adminData?.brandingType === 'banner' && adminData?.brandingLogo ? (
-                <div className="w-full h-32 rounded-2xl overflow-hidden mb-6 shadow-inner">
-                  <img 
-                    src={adminData.brandingLogo} 
-                    alt="Banner" 
-                    className="w-full h-full object-cover" 
-                    style={{ objectPosition: `center ${adminData.brandingBannerPosition ?? 50}%` }}
-                  />
+                <div className="w-full h-32 rounded-2xl overflow-hidden mb-6 shadow-inner relative">
+                  {adminData.brandingBannerCrop ? (
+                    <div 
+                      className="absolute inset-0 bg-cover bg-no-repeat"
+                      style={{ 
+                        backgroundImage: `url(${adminData.brandingLogo})`,
+                        backgroundPosition: `${adminData.brandingBannerCrop.width === 100 ? 0 : (adminData.brandingBannerCrop.x / (100 - adminData.brandingBannerCrop.width)) * 100}% ${adminData.brandingBannerCrop.height === 100 ? 0 : (adminData.brandingBannerCrop.y / (100 - adminData.brandingBannerCrop.height)) * 100}%`,
+                        backgroundSize: `${10000 / adminData.brandingBannerCrop.width}% ${10000 / adminData.brandingBannerCrop.height}%`
+                      }}
+                    />
+                  ) : (
+                    <img 
+                      src={adminData.brandingLogo} 
+                      alt="Banner" 
+                      className="w-full h-full object-cover" 
+                      style={{ objectPosition: `center ${adminData.brandingBannerPosition ?? 50}%` }}
+                    />
+                  )}
                 </div>
               ) : (
                 <div 

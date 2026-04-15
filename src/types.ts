@@ -49,5 +49,11 @@ export interface AdminUser {
   brandingTitle?: string;
   brandingType?: 'icon' | 'banner';
   brandingColor?: string;
-  brandingBannerPosition?: number; // 0 to 100 representing percentage from top
+  brandingBannerPosition?: number; 
+  brandingBannerCrop?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
 }

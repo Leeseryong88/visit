@@ -3,8 +3,8 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 import { AdminUser } from '../types';
 import { Card, Button, Input, Label } from '../components/ui/Button';
-import { Loader2, Save, Image as ImageIcon, Lock, X, Palette, ClipboardList } from 'lucide-react';
-import { motion } from 'motion/react';
+import { Loader2, Save, Image as ImageIcon, Lock, X, Palette, ClipboardList, Crop, Check } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 
 export const AdminBranding: React.FC = () => {
@@ -16,6 +16,8 @@ export const AdminBranding: React.FC = () => {
   const [tempType, setTempType] = useState<'icon' | 'banner'>('icon');
   const [tempColor, setTempColor] = useState('#2563eb');
   const [tempBannerPosition, setTempBannerPosition] = useState(50);
+  const [tempBannerCrop, setTempBannerCrop] = useState<AdminUser['brandingBannerCrop']>({ x: 0, y: 25, width: 100, height: 50 });
+  const [isCropModalOpen, setIsCropModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchAdminData = async () => {
@@ -32,6 +34,7 @@ export const AdminBranding: React.FC = () => {
           setTempType(data.brandingType || 'icon');
           setTempColor(data.brandingColor || '#2563eb');
           setTempBannerPosition(data.brandingBannerPosition ?? 50);
+          setTempBannerCrop(data.brandingBannerCrop || { x: 0, y: 25, width: 100, height: 50 });
         }
       } catch (error) {
         console.error('Error fetching admin data:', error);
@@ -58,7 +61,7 @@ export const AdminBranding: React.FC = () => {
         let height = img.height;
         
         // For banner, we might want higher resolution
-        const MAX_SIZE = tempType === 'banner' ? 1200 : 400;
+        const MAX_SIZE = tempType === 'banner' ? 1600 : 400;
 
         if (width > height) {
           if (width > MAX_SIZE) {
@@ -79,6 +82,11 @@ export const AdminBranding: React.FC = () => {
         // Use higher quality for banners
         const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
         setTempLogo(dataUrl);
+        // Reset crop for new image
+        if (tempType === 'banner') {
+          setTempBannerCrop({ x: 0, y: 25, width: 100, height: 50 });
+          setIsCropModalOpen(true);
+        }
       };
       img.src = e.target?.result as string;
     };
@@ -102,6 +110,7 @@ export const AdminBranding: React.FC = () => {
         brandingType: tempType,
         brandingColor: tempColor,
         brandingBannerPosition: tempBannerPosition,
+        brandingBannerCrop: tempBannerCrop,
       });
       setAdminData(prev => prev ? { 
         ...prev, 
@@ -110,6 +119,7 @@ export const AdminBranding: React.FC = () => {
         brandingType: tempType,
         brandingColor: tempColor,
         brandingBannerPosition: tempBannerPosition,
+        brandingBannerCrop: tempBannerCrop,
       } : null);
       alert('브랜딩 설정이 저장되었습니다.');
     } catch (error) {
@@ -286,19 +296,21 @@ export const AdminBranding: React.FC = () => {
                   tempLogo && (
                     <div className="space-y-3 pt-2">
                       <div className="flex items-center justify-between">
-                        <Label>이미지 노출 위치 (세로 방향)</Label>
-                        <span className="text-[10px] font-mono text-gray-500">{tempBannerPosition}%</span>
+                        <Label>배너 노출 영역 설정</Label>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="gap-2"
+                          onClick={() => setIsCropModalOpen(true)}
+                          disabled={!isSubscribed}
+                        >
+                          <Crop className="w-3.5 h-3.5" /> 노출 영역 조정
+                        </Button>
                       </div>
-                      <Input 
-                        type="range" 
-                        min="0" 
-                        max="100" 
-                        value={tempBannerPosition} 
-                        onChange={(e) => setTempBannerPosition(parseInt(e.target.value))}
-                        disabled={!isSubscribed}
-                        className="h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                      />
-                      <p className="text-[10px] text-gray-400">이미지의 어느 부분을 강조할지 슬라이더를 움직여 조정하세요.</p>
+                      <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 text-[10px] text-gray-500 leading-relaxed">
+                        배너는 모바일 화면 상단에 꽉 차게 표시됩니다. <br />
+                        위의 버튼을 눌러 이미지의 어느 부분을 보여줄지 박스를 이동하여 설정하세요.
+                      </div>
                     </div>
                   )
                 )}
@@ -362,11 +374,13 @@ export const AdminBranding: React.FC = () => {
             <div className="flex-1 flex flex-col overflow-y-auto">
               {tempType === 'banner' && tempLogo ? (
                 <div className="w-full h-40 flex-shrink-0 relative overflow-hidden">
-                  <img 
-                    src={tempLogo} 
-                    className="w-full h-full object-cover" 
-                    style={{ objectPosition: `center ${tempBannerPosition}%` }}
-                    alt="Banner" 
+                  <div 
+                    className="absolute inset-0 bg-cover bg-no-repeat"
+                    style={{ 
+                      backgroundImage: `url(${tempLogo})`,
+                      backgroundPosition: `${tempBannerCrop!.width === 100 ? 0 : (tempBannerCrop!.x / (100 - tempBannerCrop!.width)) * 100}% ${tempBannerCrop!.height === 100 ? 0 : (tempBannerCrop!.y / (100 - tempBannerCrop!.height)) * 100}%`,
+                      backgroundSize: `${10000 / (tempBannerCrop?.width || 100)}% ${10000 / (tempBannerCrop?.height || 100)}%`
+                    }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-white/20 to-transparent"></div>
                 </div>
@@ -412,6 +426,123 @@ export const AdminBranding: React.FC = () => {
           </div>
         </Card>
       </div>
+      {/* Banner Area (Crop) Modal */}
+      <AnimatePresence>
+        {isCropModalOpen && tempLogo && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]"
+            >
+              <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-white">
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <Crop className="w-5 h-5 text-blue-600" /> 노출 영역 조정
+                  </h2>
+                  <p className="text-xs text-gray-500 mt-1">박스를 드래그하거나 모서리를 조절하여 노출할 영역을 선택하세요.</p>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => setIsCropModalOpen(false)}>
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+
+              <div className="flex-1 bg-gray-900 p-8 flex items-center justify-center overflow-hidden relative min-h-[300px]">
+                <div className="relative inline-block max-w-full max-h-full">
+                  <img 
+                    src={tempLogo} 
+                    className="max-w-full max-h-full object-contain pointer-events-none select-none" 
+                    alt="Original" 
+                  />
+                  
+                  {/* Crop Box */}
+                  <motion.div
+                    drag
+                    dragMomentum={false}
+                    dragElastic={0}
+                    onDrag={(e, info) => {
+                      const container = e.currentTarget.parentElement;
+                      if (!container) return;
+                      const rect = container.getBoundingClientRect();
+                      const box = e.currentTarget.getBoundingClientRect();
+                      
+                      const x = Math.max(0, Math.min(100 - tempBannerCrop!.width, ((box.left - rect.left) / rect.width) * 100));
+                      const y = Math.max(0, Math.min(100 - tempBannerCrop!.height, ((box.top - rect.top) / rect.height) * 100));
+                      
+                      setTempBannerCrop(prev => prev ? { ...prev, x, y } : null);
+                    }}
+                    style={{
+                      position: 'absolute',
+                      left: `${tempBannerCrop?.x}%`,
+                      top: `${tempBannerCrop?.y}%`,
+                      width: `${tempBannerCrop?.width}%`,
+                      height: `${tempBannerCrop?.height}%`,
+                      border: '2px solid #2563eb',
+                      boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.5)',
+                      cursor: 'move',
+                      zIndex: 10
+                    }}
+                  >
+                    <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 opacity-30 pointer-events-none">
+                      <div className="border border-white/50"></div><div className="border border-white/50"></div><div className="border border-white/50"></div>
+                      <div className="border border-white/50"></div><div className="border border-white/50"></div><div className="border border-white/50"></div>
+                      <div className="border border-white/50"></div><div className="border border-white/50"></div><div className="border border-white/50"></div>
+                    </div>
+                    
+                    {/* Handles */}
+                    {/* Bottom-Right Handle for Resizing */}
+                    <div 
+                      className="absolute bottom-0 right-0 w-6 h-6 bg-blue-600 border-2 border-white rounded-full -mr-3 -mb-3 cursor-nwse-resize z-20 flex items-center justify-center"
+                      onPointerDown={(e) => {
+                        e.stopPropagation();
+                        const startX = e.clientX;
+                        const startY = e.clientY;
+                        const startW = tempBannerCrop!.width;
+                        const startH = tempBannerCrop!.height;
+                        const containerRect = e.currentTarget.closest('.relative')?.getBoundingClientRect();
+                        if (!containerRect) return;
+
+                        const onPointerMove = (moveEvent: PointerEvent) => {
+                          const deltaX = ((moveEvent.clientX - startX) / containerRect.width) * 100;
+                          const deltaY = ((moveEvent.clientY - startY) / containerRect.height) * 100;
+                          
+                          setTempBannerCrop(prev => {
+                            if (!prev) return null;
+                            const newW = Math.max(10, Math.min(100 - prev.x, startW + deltaX));
+                            const newH = Math.max(10, Math.min(100 - prev.y, startH + deltaY));
+                            return { ...prev, width: newW, height: newH };
+                          });
+                        };
+
+                        const onPointerUp = () => {
+                          window.removeEventListener('pointermove', onPointerMove);
+                          window.removeEventListener('pointerup', onPointerUp);
+                        };
+
+                        window.addEventListener('pointermove', onPointerMove);
+                        window.addEventListener('pointerup', onPointerUp);
+                      }}
+                    >
+                      <div className="w-1 h-1 bg-white rounded-full"></div>
+                    </div>
+                  </motion.div>
+                </div>
+              </div>
+
+              <div className="p-6 bg-white border-t border-gray-100 flex items-center justify-between">
+                <p className="text-sm text-gray-500">배너는 가로가 긴 형태(3:1 권장)가 가장 예쁘게 표시됩니다.</p>
+                <div className="flex gap-3">
+                  <Button variant="outline" onClick={() => setIsCropModalOpen(false)}>취소</Button>
+                  <Button className="gap-2" onClick={() => setIsCropModalOpen(false)}>
+                    <Check className="w-4 h-4" /> 영역 확정
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
