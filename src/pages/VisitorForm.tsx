@@ -6,7 +6,7 @@ import { VisitPurpose, AdminUser } from '../types';
 import { Card, Button, Input, Label } from '../components/ui/Button';
 import { DynamicForm } from '../components/DynamicForm';
 import { SignaturePad } from '../components/SignaturePad';
-import { ChevronLeft, Loader2, CheckCircle2, Download, Share2, Bell, X, Plus, ZoomIn, ClipboardList, AlertCircle } from 'lucide-react';
+import { ChevronLeft, Loader2, CheckCircle2, Download, Share2, Bell, X, ClipboardList, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { domToPng } from 'modern-screenshot';
@@ -27,41 +27,10 @@ export const VisitorForm: React.FC = () => {
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [showSignatureModal, setShowSignatureModal] = useState(false);
-  const [showZoomModal, setShowZoomModal] = useState(false);
-  const [zoomScale, setZoomScale] = useState(1);
 
   const [error, setError] = useState<string | null>(null);
-  const [initialPinchDistance, setInitialPinchDistance] = useState<number | null>(null);
-  const [initialZoomScale, setInitialZoomScale] = useState<number>(1);
 
   const navigate = useNavigate();
-
-  const getDistance = (touches: React.TouchList) => {
-    return Math.sqrt(
-      Math.pow(touches[0].pageX - touches[1].pageX, 2) +
-      Math.pow(touches[0].pageY - touches[1].pageY, 2)
-    );
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length === 2) {
-      setInitialPinchDistance(getDistance(e.touches));
-      setInitialZoomScale(zoomScale);
-    }
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (e.touches.length === 2 && initialPinchDistance !== null) {
-      const currentDistance = getDistance(e.touches);
-      const scaleFactor = currentDistance / initialPinchDistance;
-      const newScale = Math.min(5, Math.max(0.5, initialZoomScale * scaleFactor));
-      setZoomScale(newScale);
-    }
-  };
-
-  const handleTouchEnd = () => {
-    setInitialPinchDistance(null);
-  };
 
   useEffect(() => {
     if (!purposeId || !adminId) return;
@@ -237,6 +206,15 @@ export const VisitorForm: React.FC = () => {
         alert(`이미지 생성 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`);
       }
     }
+  };
+
+  const handleDownloadNotificationImage = (imageUrl: string) => {
+    const link = document.createElement('a');
+    link.href = imageUrl;
+    link.download = `notification-${new Date().getTime()}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   if (loading) {
@@ -448,19 +426,10 @@ export const VisitorForm: React.FC = () => {
                 <h2 className="text-xl font-bold text-gray-900">시설관리자 알림</h2>
               </div>
               <div 
-                className="p-6 space-y-4 cursor-pointer group"
-                onClick={() => {
-                  if (purpose?.notificationImage && (purpose.notificationType === 'image' || purpose.notificationType === 'both')) {
-                    setZoomScale(1);
-                    setShowZoomModal(true);
-                  }
-                }}
+                className="p-6 space-y-4"
               >
-                <div className="flex items-center gap-2 text-blue-600 group-hover:text-blue-700 transition-colors">
+                <div className="flex items-center gap-2 text-blue-600">
                   <p className="text-sm font-medium">시설관리자의 알림이 있습니다. 내용을 확인해 주세요.</p>
-                  {purpose?.notificationImage && (purpose.notificationType === 'image' || purpose.notificationType === 'both') && (
-                    <ZoomIn className="w-4 h-4" />
-                  )}
                 </div>
 
                 {purpose?.notificationText && (purpose.notificationType === 'text' || purpose.notificationType === 'both') && (
@@ -470,13 +439,20 @@ export const VisitorForm: React.FC = () => {
                 )}
 
                 {purpose?.notificationImage && (purpose.notificationType === 'image' || purpose.notificationType === 'both') && (
-                  <div className="rounded-xl overflow-hidden border border-gray-100 shadow-inner">
-                    <img 
-                      src={purpose.notificationImage} 
-                      alt="Admin Notification" 
-                      className="w-full h-auto"
-                      referrerPolicy="no-referrer"
-                    />
+                  <div className="space-y-2">
+                    <div 
+                      className="rounded-xl overflow-hidden border border-gray-100 shadow-inner cursor-pointer active:opacity-80 transition-opacity"
+                      onClick={() => handleDownloadNotificationImage(purpose.notificationImage!)}
+                      title="클릭하여 이미지 다운로드"
+                    >
+                      <img 
+                        src={purpose.notificationImage} 
+                        alt="Admin Notification" 
+                        className="w-full h-auto"
+                        referrerPolicy="no-referrer"
+                      />
+                    </div>
+                    <p className="text-[11px] text-gray-400 text-center">이미지를 클릭하면 기기에 저장됩니다.</p>
                   </div>
                 )}
               </div>
@@ -484,103 +460,6 @@ export const VisitorForm: React.FC = () => {
                 <Button className="w-full h-12" onClick={() => { setShowNotificationModal(false); setShowSignatureModal(true); }}>
                   확인했습니다
                 </Button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Image Zoom Modal - Mobile Optimized */}
-      <AnimatePresence>
-        {showZoomModal && purpose?.notificationImage && (
-          <div 
-            className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-black/98 backdrop-blur-lg select-none touch-none"
-            onWheel={(e) => {
-              if (e.deltaY < 0) setZoomScale(prev => Math.min(5, prev + 0.1));
-              else setZoomScale(prev => Math.max(0.5, prev - 0.1));
-            }}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          >
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="relative w-full h-full flex flex-col"
-            >
-              {/* Top Controls Overlay */}
-              <div className="absolute top-0 left-0 right-0 p-6 flex items-center justify-between z-10 bg-gradient-to-b from-black/60 to-transparent">
-                <div className="flex items-center gap-3">
-                  <div className="w-1.5 h-6 bg-blue-500 rounded-full" />
-                  <p className="text-white font-bold tracking-tight">상세 확인</p>
-                </div>
-                <button 
-                  onClick={() => setShowZoomModal(false)}
-                  className="p-3 bg-white/10 hover:bg-white/20 active:scale-90 backdrop-blur-md rounded-full text-white border border-white/20 transition-all shadow-lg"
-                  aria-label="닫기"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-
-              {/* Image Canvas */}
-              <div 
-                className="flex-1 w-full flex items-center justify-center overflow-hidden relative cursor-grab active:cursor-grabbing"
-                onDoubleClick={() => setZoomScale(1)}
-              >
-                <motion.img
-                  src={purpose.notificationImage}
-                  alt="Zoomed Notification"
-                  animate={{ scale: zoomScale }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                  className="max-w-full max-h-full object-contain shadow-2xl"
-                  referrerPolicy="no-referrer"
-                  drag
-                  dragConstraints={{ 
-                    left: -window.innerWidth * (zoomScale - 1) / 2, 
-                    right: window.innerWidth * (zoomScale - 1) / 2, 
-                    top: -window.innerHeight * (zoomScale - 1) / 2, 
-                    bottom: window.innerHeight * (zoomScale - 1) / 2 
-                  }}
-                  dragElastic={0.1}
-                />
-              </div>
-              
-              {/* Bottom Controls Overlay */}
-              <div className="absolute bottom-0 left-0 right-0 p-8 flex flex-col items-center gap-6 bg-gradient-to-t from-black/60 to-transparent">
-                {/* Zoom Control Bar - Larger for Mobile */}
-                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-xl rounded-2xl p-2 border border-white/20 shadow-2xl">
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); setZoomScale(prev => Math.max(0.5, prev - 0.25)); }}
-                    className="w-12 h-12 flex items-center justify-center hover:bg-white/10 active:bg-white/20 rounded-xl text-white transition-all"
-                    title="축소"
-                  >
-                    <div className="w-5 h-0.5 bg-white rounded-full" />
-                  </button>
-                  
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setZoomScale(1); }}
-                    className="px-6 h-12 flex items-center text-white font-bold text-base min-w-[80px] justify-center hover:bg-white/10 active:bg-white/20 rounded-xl transition-all"
-                    title="초기화"
-                  >
-                    {Math.round(zoomScale * 100)}%
-                  </button>
-                  
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); setZoomScale(prev => Math.min(5, prev + 0.25)); }}
-                    className="w-12 h-12 flex items-center justify-center hover:bg-white/10 active:bg-white/20 rounded-xl text-white transition-all"
-                    title="확대"
-                  >
-                    <Plus className="w-6 h-6" />
-                  </button>
-                </div>
-
-                <div className="bg-black/40 backdrop-blur-md px-5 py-2.5 rounded-full border border-white/10 shadow-lg">
-                  <p className="text-white/80 text-[13px] font-medium tracking-tight text-center">
-                    두 손가락으로 핀치하거나 버튼으로 확대/축소 하세요
-                  </p>
-                </div>
               </div>
             </motion.div>
           </div>
