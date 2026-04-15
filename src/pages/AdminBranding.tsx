@@ -18,6 +18,7 @@ export const AdminBranding: React.FC = () => {
   const [tempBannerPosition, setTempBannerPosition] = useState(50);
   const [tempBannerCrop, setTempBannerCrop] = useState<AdminUser['brandingBannerCrop']>({ x: 0, y: 25, width: 100, height: 50 });
   const [isCropModalOpen, setIsCropModalOpen] = useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchAdminData = async () => {
@@ -449,7 +450,7 @@ export const AdminBranding: React.FC = () => {
               </div>
 
               <div className="flex-1 bg-gray-900 p-8 flex items-center justify-center overflow-hidden relative min-h-[300px]">
-                <div className="relative inline-block max-w-full max-h-full">
+                <div ref={containerRef} className="relative inline-block max-w-full max-h-full">
                   <img 
                     src={tempLogo} 
                     className="max-w-full max-h-full object-contain pointer-events-none select-none" 
@@ -462,13 +463,16 @@ export const AdminBranding: React.FC = () => {
                     dragMomentum={false}
                     dragElastic={0}
                     onDrag={(e, info) => {
-                      const container = e.currentTarget.parentElement;
-                      if (!container) return;
-                      const rect = container.getBoundingClientRect();
-                      const box = e.currentTarget.getBoundingClientRect();
+                      if (!containerRef.current || !tempBannerCrop) return;
+                      const rect = containerRef.current.getBoundingClientRect();
                       
-                      const x = Math.max(0, Math.min(100 - tempBannerCrop!.width, ((box.left - rect.left) / rect.width) * 100));
-                      const y = Math.max(0, Math.min(100 - tempBannerCrop!.height, ((box.top - rect.top) / rect.height) * 100));
+                      // Calculate new X and Y based on info.point which is relative to the viewport
+                      // But info.offset is cumulative. Better to use current state + info.delta.
+                      // Actually, let's use the bounding box of the element itself.
+                      const box = (e.target as HTMLElement).getBoundingClientRect();
+                      
+                      const x = Math.max(0, Math.min(100 - tempBannerCrop.width, ((box.left - rect.left) / rect.width) * 100));
+                      const y = Math.max(0, Math.min(100 - tempBannerCrop.height, ((box.top - rect.top) / rect.height) * 100));
                       
                       setTempBannerCrop(prev => prev ? { ...prev, x, y } : null);
                     }}
@@ -496,16 +500,17 @@ export const AdminBranding: React.FC = () => {
                       className="absolute bottom-0 right-0 w-6 h-6 bg-blue-600 border-2 border-white rounded-full -mr-3 -mb-3 cursor-nwse-resize z-20 flex items-center justify-center"
                       onPointerDown={(e) => {
                         e.stopPropagation();
+                        if (!containerRef.current || !tempBannerCrop) return;
+                        
                         const startX = e.clientX;
                         const startY = e.clientY;
-                        const startW = tempBannerCrop!.width;
-                        const startH = tempBannerCrop!.height;
-                        const containerRect = e.currentTarget.closest('.relative')?.getBoundingClientRect();
-                        if (!containerRect) return;
+                        const startW = tempBannerCrop.width;
+                        const startH = tempBannerCrop.height;
+                        const rect = containerRef.current.getBoundingClientRect();
 
                         const onPointerMove = (moveEvent: PointerEvent) => {
-                          const deltaX = ((moveEvent.clientX - startX) / containerRect.width) * 100;
-                          const deltaY = ((moveEvent.clientY - startY) / containerRect.height) * 100;
+                          const deltaX = ((moveEvent.clientX - startX) / rect.width) * 100;
+                          const deltaY = ((moveEvent.clientY - startY) / rect.height) * 100;
                           
                           setTempBannerCrop(prev => {
                             if (!prev) return null;
