@@ -31,8 +31,37 @@ export const VisitorForm: React.FC = () => {
   const [zoomScale, setZoomScale] = useState(1);
 
   const [error, setError] = useState<string | null>(null);
+  const [initialPinchDistance, setInitialPinchDistance] = useState<number | null>(null);
+  const [initialZoomScale, setInitialZoomScale] = useState<number>(1);
 
   const navigate = useNavigate();
+
+  const getDistance = (touches: React.TouchList) => {
+    return Math.sqrt(
+      Math.pow(touches[0].pageX - touches[1].pageX, 2) +
+      Math.pow(touches[0].pageY - touches[1].pageY, 2)
+    );
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      setInitialPinchDistance(getDistance(e.touches));
+      setInitialZoomScale(zoomScale);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && initialPinchDistance !== null) {
+      const currentDistance = getDistance(e.touches);
+      const scaleFactor = currentDistance / initialPinchDistance;
+      const newScale = Math.min(5, Math.max(0.5, initialZoomScale * scaleFactor));
+      setZoomScale(newScale);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setInitialPinchDistance(null);
+  };
 
   useEffect(() => {
     if (!purposeId || !adminId) return;
@@ -466,6 +495,13 @@ export const VisitorForm: React.FC = () => {
         {showZoomModal && purpose?.notificationImage && (
           <div 
             className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-black/98 backdrop-blur-lg select-none touch-none"
+            onWheel={(e) => {
+              if (e.deltaY < 0) setZoomScale(prev => Math.min(5, prev + 0.1));
+              else setZoomScale(prev => Math.max(0.5, prev - 0.1));
+            }}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
           >
             <motion.div
               initial={{ opacity: 0 }}
@@ -502,12 +538,12 @@ export const VisitorForm: React.FC = () => {
                   referrerPolicy="no-referrer"
                   drag
                   dragConstraints={{ 
-                    left: -window.innerWidth * (zoomScale - 1) / 2 - 100, 
-                    right: window.innerWidth * (zoomScale - 1) / 2 + 100, 
-                    top: -window.innerHeight * (zoomScale - 1) / 2 - 100, 
-                    bottom: window.innerHeight * (zoomScale - 1) / 2 + 100 
+                    left: -window.innerWidth * (zoomScale - 1) / 2, 
+                    right: window.innerWidth * (zoomScale - 1) / 2, 
+                    top: -window.innerHeight * (zoomScale - 1) / 2, 
+                    bottom: window.innerHeight * (zoomScale - 1) / 2 
                   }}
-                  dragElastic={0.2}
+                  dragElastic={0.1}
                 />
               </div>
               
@@ -541,7 +577,7 @@ export const VisitorForm: React.FC = () => {
                 </div>
 
                 <div className="bg-black/40 backdrop-blur-md px-5 py-2.5 rounded-full border border-white/10 shadow-lg">
-                  <p className="text-white/80 text-[13px] font-medium tracking-tight">
+                  <p className="text-white/80 text-[13px] font-medium tracking-tight text-center">
                     두 손가락으로 핀치하거나 버튼으로 확대/축소 하세요
                   </p>
                 </div>
