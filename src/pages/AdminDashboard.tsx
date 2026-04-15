@@ -133,47 +133,47 @@ export const AdminDashboard: React.FC = () => {
         <p className="text-gray-500">방문 현황을 한눈에 확인하세요.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         {statCards.map((stat) => (
-          <Card key={stat.name} className="p-6 flex items-center gap-5">
-            <div className={cn('p-4 rounded-2xl', stat.bg)}>
-              <stat.icon className={cn('w-6 h-6', stat.color)} />
+          <Card key={stat.name} className="p-4 md:p-6 flex items-center gap-4 md:gap-5">
+            <div className={cn('p-3 md:p-4 rounded-2xl', stat.bg)}>
+              <stat.icon className={cn('w-5 h-5 md:w-6 md:h-6', stat.color)} />
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500">{stat.name}</p>
-              <p className="text-2xl font-bold text-gray-900">{stat.value.toLocaleString()}</p>
+              <p className="text-xs md:text-sm font-medium text-gray-500">{stat.name}</p>
+              <p className="text-xl md:text-2xl font-bold text-gray-900">{stat.value.toLocaleString()}</p>
             </div>
           </Card>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card className="p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+        <Card className="p-4 md:p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-              <Clock className="w-5 h-5 text-gray-400" />
+            <h2 className="text-base md:text-lg font-bold text-gray-900 flex items-center gap-2">
+              <Clock className="w-4 h-4 md:w-5 md:h-5 text-gray-400" />
               최근 방문 기록
             </h2>
-            <Link to="/admin/logs" className="text-sm text-blue-600 hover:underline flex items-center gap-1">
+            <Link to="/admin/logs" className="text-xs md:text-sm text-blue-600 hover:underline flex items-center gap-1">
               전체 보기 <ArrowUpRight className="w-3 h-3" />
             </Link>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3 md:space-y-4">
             {recentLogs.length === 0 ? (
               <p className="text-center py-10 text-gray-400 text-sm">기록이 없습니다.</p>
             ) : (
               recentLogs.map((log) => (
-                <div key={log.id} className="flex items-center justify-between p-4 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors">
-                  <div>
-                    <p className="font-bold text-gray-900">{log.visitorName}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{log.purposeName} • {log.visitorContact}</p>
+                <div key={log.id} className="flex items-center justify-between p-3 md:p-4 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors">
+                  <div className="min-w-0 flex-1 mr-2">
+                    <p className="font-bold text-sm md:text-base text-gray-900 truncate">{log.visitorName}</p>
+                    <p className="text-[10px] md:text-xs text-gray-500 mt-0.5 truncate">{log.purposeName} • {log.visitorContact}</p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs font-medium text-gray-900">
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-[10px] md:text-xs font-medium text-gray-900">
                       {log.visitDate?.toDate ? format(log.visitDate.toDate(), 'HH:mm', { locale: ko }) : ''}
                     </p>
-                    <p className="text-[10px] text-gray-400">
+                    <p className="text-[9px] md:text-[10px] text-gray-400">
                       {log.visitDate?.toDate ? format(log.visitDate.toDate(), 'MM/dd', { locale: ko }) : ''}
                     </p>
                   </div>
@@ -183,15 +183,15 @@ export const AdminDashboard: React.FC = () => {
           </div>
         </Card>
 
-        <Card className="p-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-            <ClipboardList className="w-5 h-5 text-gray-400" />
+        <Card className="p-4 md:p-6">
+          <h2 className="text-base md:text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <ClipboardList className="w-4 h-4 md:w-5 md:h-5 text-gray-400" />
             운영 안내
           </h2>
-          <div className="space-y-4 text-sm text-gray-600 leading-relaxed">
-            <p>• 새로운 방문 목적을 추가하려면 '방문 목적 관리' 메뉴를 이용하세요.</p>
+          <div className="space-y-3 md:space-y-4 text-xs md:text-sm text-gray-600 leading-relaxed">
+            <p>• 새로운 방문 목적을 추가하려면 '방문 목적' 메뉴를 이용하세요.</p>
             <p>• 각 목적별로 고유한 QR코드를 생성하여 현장에 비치할 수 있습니다.</p>
-            <p>• 방문자가 제출한 정보는 실시간으로 '방문 기록 조회'에서 확인 가능합니다.</p>
+            <p>• 방문자가 제출한 정보는 실시간으로 '기록 조회'에서 확인 가능합니다.</p>
             <p>• 개인정보 보호를 위해 방문 기록은 주기적으로 관리해 주세요.</p>
           </div>
         </Card>
