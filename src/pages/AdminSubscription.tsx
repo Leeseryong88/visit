@@ -792,7 +792,7 @@ export const AdminSubscription: React.FC = () => {
                         window.removeEventListener('pointerup', onPointerUp);
                       };
 
-                      window.addEventListener('pointermove', onPointerMove);
+                      window.addEventListener('pointermove', onPointerMove, { passive: false });
                       window.addEventListener('pointerup', onPointerUp);
                     }}
                     style={{
@@ -804,11 +804,12 @@ export const AdminSubscription: React.FC = () => {
                       border: '2px solid #2563eb',
                       boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.5)',
                       cursor: 'move',
-                      zIndex: 10
+                      zIndex: 10,
+                      touchAction: 'none'
                     }}
                   >
                     <div 
-                      className="absolute bottom-0 right-0 w-6 h-6 bg-blue-600 border-2 border-white rounded-full -mr-3 -mb-3 cursor-nwse-resize z-20"
+                      className="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 border-2 border-white rounded-full -mr-4 -mb-4 cursor-nwse-resize z-20 flex items-center justify-center shadow-lg"
                       onPointerDown={(e) => {
                         e.stopPropagation();
                         if (!containerRef.current || !tempBannerCrop) return;
@@ -836,10 +837,12 @@ export const AdminSubscription: React.FC = () => {
                           window.removeEventListener('pointerup', onPointerUp);
                         };
 
-                        window.addEventListener('pointermove', onPointerMove);
+                        window.addEventListener('pointermove', onPointerMove, { passive: false });
                         window.addEventListener('pointerup', onPointerUp);
                       }}
-                    />
+                    >
+                      <div className="w-3 h-3 border-r-2 border-b-2 border-white rotate-45 -mt-1 -ml-1" />
+                    </div>
                   </motion.div>
                 </div>
               </div>
