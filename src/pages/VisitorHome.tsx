@@ -221,7 +221,7 @@ export const VisitorHome: React.FC = () => {
         <p className="text-[10px] text-gray-300 mt-2 tracking-widest">v1.1.0</p>
       </header>
 
-      <main className="w-full max-w-md space-y-4">
+      <main className="w-full max-w-md px-6 space-y-4">
         {purposes.length === 0 ? (
           <Card className="p-10 text-center flex flex-col items-center gap-4">
             <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center">
