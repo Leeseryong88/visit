@@ -6,6 +6,7 @@ import { VisitPurpose, AdminUser } from '../types';
 import { Card, Button, Input, Label } from '../components/ui/Button';
 import { DynamicForm } from '../components/DynamicForm';
 import { SignaturePad } from '../components/SignaturePad';
+import { uploadBase64 } from '../lib/storage';
 import { ChevronLeft, Loader2, CheckCircle2, Download, Share2, Bell, X, ClipboardList, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
@@ -141,6 +142,20 @@ export const VisitorForm: React.FC = () => {
     setSubmitting(true);
     
     try {
+      const timestamp = new Date().getTime();
+      
+      // 1. Upload signature to storage
+      const signatureUrl = await uploadBase64(`logs/${adminId}/${timestamp}_signature.png`, signatureData);
+      
+      // 2. Upload any files in formData to storage
+      const updatedFormData = { ...formData };
+      for (const field of purpose.fields) {
+        if (field.type === 'file' && formData[field.id] && formData[field.id].startsWith('data:')) {
+          const fileUrl = await uploadBase64(`logs/${adminId}/${timestamp}_${field.id}.jpg`, formData[field.id]);
+          updatedFormData[field.id] = fileUrl;
+        }
+      }
+
       // Extract common fields for indexing
       const visitorNameField = purpose.fields.find(f => f.id === 'name' || f.label.includes('성함') || f.label.includes('방문자명') || f.label.includes('이름'));
       const visitorContactField = purpose.fields.find(f => f.id === 'contact' || f.label.includes('연락처') || f.label.includes('전화번호') || f.label.includes('휴대폰'));
@@ -148,18 +163,18 @@ export const VisitorForm: React.FC = () => {
       const logData = {
         purposeId: purpose.id,
         purposeName: purpose.name,
-        visitorName: visitorNameField ? formData[visitorNameField.id] : (formData['name'] || 'Unknown'),
-        visitorContact: visitorContactField ? formData[visitorContactField.id] : (formData['contact'] || 'Unknown'),
-        data: formData,
-        signature: signatureData,
+        visitorName: visitorNameField ? updatedFormData[visitorNameField.id] : (updatedFormData['name'] || 'Unknown'),
+        visitorContact: visitorContactField ? updatedFormData[visitorContactField.id] : (updatedFormData['contact'] || 'Unknown'),
+        data: updatedFormData,
+        signature: signatureUrl,
         ownerId: adminId,
-        visitDate: new Date(), // Use local date for immediate display
+        visitDate: new Date(),
         createdAt: serverTimestamp(),
       };
 
       await addDoc(collection(db, 'logs'), {
         ...logData,
-        visitDate: serverTimestamp(), // Overwrite with server timestamp for DB
+        visitDate: serverTimestamp(),
       });
       
       setSubmittedLog(logData);

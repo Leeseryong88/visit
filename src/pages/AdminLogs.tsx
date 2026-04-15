@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { collection, query, getDocs, orderBy, where, Timestamp, limit } from 'firebase/firestore';
+import { collection, query, getDocs, orderBy, where, Timestamp, limit, startAfter, QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 import { VisitorLog } from '../types';
 import { Card, Button, Input, Label } from '../components/ui/Button';
-import { Search, Filter, Download, Eye, X, Loader2, Calendar } from 'lucide-react';
+import { Search, Filter, Download, Eye, X, Loader2, Calendar, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'motion/react';
@@ -14,6 +14,9 @@ export const AdminLogs: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLog, setSelectedLog] = useState<VisitorLog | null>(null);
+  const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   
   // Date filter states
   const [startDate, setStartDate] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -24,31 +27,54 @@ export const AdminLogs: React.FC = () => {
     fetchLogs();
   }, []);
 
-  const fetchLogs = async (sDate = startDate, eDate = endDate) => {
+  const PAGE_SIZE = 50;
+
+  const fetchLogs = async (sDate = startDate, eDate = endDate, isMore = false) => {
     const user = auth.currentUser;
     if (!user) return;
 
-    setLoading(true);
+    if (isMore) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+      setLastDoc(null);
+    }
+
     try {
       const start = new Date(sDate);
       start.setHours(0, 0, 0, 0);
       const end = new Date(eDate);
       end.setHours(23, 59, 59, 999);
 
-      const q = query(
+      let q = query(
         collection(db, 'logs'),
         where('ownerId', '==', user.uid),
         where('visitDate', '>=', Timestamp.fromDate(start)),
         where('visitDate', '<=', Timestamp.fromDate(end)),
         orderBy('visitDate', 'desc'),
-        limit(500)
+        limit(PAGE_SIZE)
       );
+
+      if (isMore && lastDoc) {
+        q = query(q, startAfter(lastDoc));
+      }
+
       const snapshot = await getDocs(q);
-      setLogs(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as VisitorLog)));
+      const newLogs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as VisitorLog));
+      
+      if (isMore) {
+        setLogs(prev => [...prev, ...newLogs]);
+      } else {
+        setLogs(newLogs);
+      }
+
+      setLastDoc(snapshot.docs[snapshot.docs.length - 1] || null);
+      setHasMore(snapshot.docs.length === PAGE_SIZE);
     } catch (error) {
       console.error('Error fetching logs:', error);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
@@ -228,6 +254,19 @@ export const AdminLogs: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {hasMore && (
+        <div className="flex justify-center pt-4">
+          <Button 
+            variant="outline" 
+            onClick={() => fetchLogs(startDate, endDate, true)}
+            isLoading={loadingMore}
+            className="gap-2"
+          >
+            <ChevronDown className="w-4 h-4" /> 더 보기
+          </Button>
+        </div>
+      )}
 
       {/* Detail Modal */}
       <AnimatePresence>

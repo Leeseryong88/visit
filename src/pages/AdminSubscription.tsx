@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { doc, getDoc, updateDoc, collection, query, where, getDocs, orderBy, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 import { AdminUser, VisitPurpose } from '../types';
+import { uploadBase64 } from '../lib/storage';
 import { Card, Button, Input, Label } from '../components/ui/Button';
 import { Loader2, Save, Image as ImageIcon, X, Palette, ClipboardList, Crop, Check, Bell } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -170,8 +171,13 @@ export const AdminSubscription: React.FC = () => {
 
     setSaving(true);
     try {
+      let finalLogoUrl = tempLogo;
+      if (tempLogo && tempLogo.startsWith('data:')) {
+        finalLogoUrl = await uploadBase64(`branding/${user.uid}/logo_${new Date().getTime()}.jpg`, tempLogo);
+      }
+
       await updateDoc(doc(db, 'users', user.uid), {
-        brandingLogo: tempLogo || null,
+        brandingLogo: finalLogoUrl || null,
         brandingTitle: tempTitle,
         brandingType: tempType,
         brandingColor: tempColor,
@@ -180,13 +186,14 @@ export const AdminSubscription: React.FC = () => {
       });
       setAdminData(prev => prev ? { 
         ...prev, 
-        brandingLogo: tempLogo, 
+        brandingLogo: finalLogoUrl, 
         brandingTitle: tempTitle,
         brandingType: tempType,
         brandingColor: tempColor,
         brandingBannerPosition: tempBannerPosition,
         brandingBannerCrop: tempBannerCrop,
       } : null);
+      setTempLogo(finalLogoUrl);
       alert('브랜딩 설정이 저장되었습니다.');
     } catch (error) {
       console.error('Error saving branding:', error);
@@ -197,15 +204,20 @@ export const AdminSubscription: React.FC = () => {
   };
 
   const handleSaveNotification = async () => {
-    if (!selectedPurposeId) return;
+    if (!selectedPurposeId || !auth.currentUser) return;
 
     setSaving(true);
     try {
+      let finalImageUrl = notificationImage;
+      if (notificationImage && notificationImage.startsWith('data:')) {
+        finalImageUrl = await uploadBase64(`notifications/${auth.currentUser.uid}/${selectedPurposeId}_${new Date().getTime()}.jpg`, notificationImage);
+      }
+
       await updateDoc(doc(db, 'purposes', selectedPurposeId), {
         notificationEnabled,
         notificationType,
         notificationText,
-        notificationImage: notificationImage || null,
+        notificationImage: finalImageUrl || null,
         updatedAt: serverTimestamp(),
       });
       
@@ -214,9 +226,10 @@ export const AdminSubscription: React.FC = () => {
         notificationEnabled,
         notificationType,
         notificationText,
-        notificationImage
+        notificationImage: finalImageUrl
       } : p));
       
+      setNotificationImage(finalImageUrl);
       alert('알림 설정이 저장되었습니다.');
     } catch (error) {
       console.error('Error saving notification:', error);
