@@ -152,7 +152,7 @@ export const VisitorHome: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (loading || !adminData) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />

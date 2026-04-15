@@ -15,10 +15,11 @@ service firebase.storage {
 
     // Rules for visitor logs (signatures, attachments)
     match /logs/{adminId}/{allPaths=**} {
-      // Visitors can upload their own images
-      allow write: if true; 
-      // Admins can read their own logs' images
-      allow read: if isAuthenticated() && (request.auth.uid == adminId || isAdmin());
+      // Visitors can upload (create) and get download URLs (read)
+      allow create: if true;
+      allow get: if true;
+      // Only admins can list, update or delete
+      allow list, update, delete: if isAuthenticated() && (request.auth.uid == adminId || isAdmin());
     }
 
     // Rules for branding (logos)
