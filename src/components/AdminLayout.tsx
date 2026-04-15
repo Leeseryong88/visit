@@ -24,7 +24,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     { name: '방문 목적 관리', path: '/admin/purposes', icon: ClipboardList },
     { name: '방문 기록 조회', path: '/admin/logs', icon: FileText },
     { name: 'QR코드 관리', path: '/admin/qrcodes', icon: QrCode },
-    { name: '브랜딩 관리', path: '/admin/branding', icon: Palette },
+    { name: '구독 서비스', path: '/admin/subscription', icon: Palette },
   ];
 
   if (auth.currentUser?.email === 'kidcap1001@gmail.com') {

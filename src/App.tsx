@@ -12,7 +12,7 @@ import { AdminDashboard } from './pages/AdminDashboard';
 import { AdminPurposes } from './pages/AdminPurposes';
 import { AdminLogs } from './pages/AdminLogs';
 import { AdminQRCodes } from './pages/AdminQRCodes';
-import { AdminBranding } from './pages/AdminBranding';
+import { AdminSubscription } from './pages/AdminSubscription';
 import { SuperAdmin } from './pages/SuperAdmin';
 
 // Components
@@ -62,7 +62,7 @@ export default function App() {
         <Route path="/admin/purposes" element={<ProtectedRoute user={user}><ErrorBoundary><AdminPurposes /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/admin/logs" element={<ProtectedRoute user={user}><ErrorBoundary><AdminLogs /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/admin/qrcodes" element={<ProtectedRoute user={user}><ErrorBoundary><AdminQRCodes /></ErrorBoundary></ProtectedRoute>} />
-        <Route path="/admin/branding" element={<ProtectedRoute user={user}><ErrorBoundary><AdminBranding /></ErrorBoundary></ProtectedRoute>} />
+        <Route path="/admin/subscription" element={<ProtectedRoute user={user}><ErrorBoundary><AdminSubscription /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/admin/super" element={
           user?.email === 'kidcap1001@gmail.com' ? (
             <ProtectedRoute user={user}><ErrorBoundary><SuperAdmin /></ErrorBoundary></ProtectedRoute>
