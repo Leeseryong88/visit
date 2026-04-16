@@ -4,7 +4,7 @@ import { db, auth } from '../firebase';
 import { VisitPurpose, AdminUser } from '../types';
 import { Card, Button, Input } from '../components/ui/Button';
 import { QRCodeSVG } from 'qrcode.react';
-import { Download, Printer, Loader2, Save, Edit2, X } from 'lucide-react';
+import { Download, Printer, Loader2, Save, Edit2, X, ExternalLink } from 'lucide-react';
 
 export const AdminQRCodes: React.FC = () => {
   const [purposes, setPurposes] = useState<VisitPurpose[]>([]);
@@ -26,8 +26,8 @@ export const AdminQRCodes: React.FC = () => {
         if (adminDoc.exists()) {
           const data = adminDoc.data() as AdminUser;
           setAdminData(data);
-          setTempQrText(data.qrText || '모든 방문 목적을 선택할 수 있는\n메인 페이지로 연결됩니다 작성후 관리자에게 보여주시기 바랍니다.');
-          setTempQrTitle(data.qrTitle || '공통 방문 QR');
+          setTempQrText(data.qrText || '본 현장은 안전작업 허가제 시행 구역입니다.\n작업 전 반드시 QR코드를 스캔하여 허가서를 제출하고 승인을 받은 후 작업을 시작해 주시기 바랍니다.');
+          setTempQrTitle(data.qrTitle || '현장 접근 및 작업 허가 QR');
         }
 
         const q = query(
@@ -97,8 +97,8 @@ export const AdminQRCodes: React.FC = () => {
     if (!printWindow) return;
 
     const svgHtml = svg.outerHTML;
-    const qrTitle = adminData?.qrTitle || '공통 방문 QR';
-    const qrText = adminData?.qrText || '모든 방문 목적을 선택할 수 있는\n메인 페이지로 연결됩니다 작성후 관리자에게 보여주시기 바랍니다.';
+    const qrTitle = adminData?.qrTitle || '현장 접근 및 작업 허가 QR';
+    const qrText = adminData?.qrText || '본 현장은 안전작업 허가제 시행 구역입니다.\n작업 전 반드시 QR코드를 스캔하여 허가서를 제출하고 승인을 받은 후 작업을 시작해 주시기 바랍니다.';
     const formattedText = qrText.replace(/\n/g, '<br />');
 
     printWindow.document.write(`
@@ -239,7 +239,7 @@ export const AdminQRCodes: React.FC = () => {
             ) : (
               <div className="space-y-6">
                 <div className="group relative inline-block">
-                  <h3 className="font-bold text-xl text-gray-900">{adminData?.qrTitle || '공통 방문 QR'}</h3>
+                  <h3 className="font-bold text-xl text-gray-900">{adminData?.qrTitle || '현장 접근 및 작업 허가 QR'}</h3>
                   <button 
                     onClick={() => setIsEditing(true)}
                     className="absolute -right-8 top-1/2 -translate-y-1/2 p-1 text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -249,17 +249,17 @@ export const AdminQRCodes: React.FC = () => {
                 </div>
                 
                 <p className="text-sm text-gray-500 whitespace-pre-wrap leading-relaxed">
-                  {adminData?.qrText || '모든 방문 목적을 선택할 수 있는\n메인 페이지로 연결됩니다 작성후 관리자에게 보여주시기 바랍니다.'}
+                  {adminData?.qrText || '본 현장은 안전작업 허가제 시행 구역입니다.\n작업 전 반드시 QR코드를 스캔하여 허가서를 제출하고 승인을 받은 후 작업을 시작해 주시기 바랍니다.'}
                 </p>
               </div>
             )}
           </div>
 
           <div className="flex gap-3 w-full">
-            <Button variant="outline" className="flex-1 gap-2 h-12" onClick={() => downloadQR('main', adminData?.qrTitle || '공통_방문')}>
+            <Button variant="outline" className="flex-1 gap-2 h-12" onClick={() => downloadQR('main', adminData?.qrTitle || '현장_접근_QR')}>
               <Download className="w-4 h-4" /> 이미지 저장
             </Button>
-            <Button variant="outline" className="flex-1 gap-2 h-12" onClick={() => printQR('main', adminData?.qrTitle || '공통 방문')}>
+            <Button variant="outline" className="flex-1 gap-2 h-12" onClick={() => printQR('main', adminData?.qrTitle || '현장 접근 및 작업 허가')}>
               <Printer className="w-4 h-4" /> 인쇄하기
             </Button>
           </div>
@@ -278,8 +278,24 @@ export const AdminQRCodes: React.FC = () => {
             </div>
             <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
               <p className="font-bold text-gray-900 mb-1">3. 비치 방법</p>
-              <p>출력된 QR코드를 안내 데스크나 출입구 등 방문객의 눈에 잘 띄는 곳에 비치해 주세요.</p>
+              <p>출력된 QR코드를 현장 입구나 안내 데스크 등 작업자의 눈에 잘 띄는 곳에 비치해 주세요.</p>
             </div>
+          </div>
+
+          <div className="mt-8 pt-6 border-t border-gray-100">
+            <a 
+              href={qrUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full p-4 rounded-2xl bg-blue-50 text-blue-700 font-bold hover:bg-blue-100 transition-colors group"
+            >
+              <ExternalLink className="w-4 h-4" />
+              작업자용 페이지 테스트 하기
+              <span className="text-xs font-normal text-blue-400 group-hover:translate-x-1 transition-transform">→</span>
+            </a>
+            <p className="text-[11px] text-gray-400 text-center mt-3">
+              * 실제 작업자가 보게 될 화면을 미리 확인하고 테스트할 수 있습니다.
+            </p>
           </div>
         </Card>
       </div>

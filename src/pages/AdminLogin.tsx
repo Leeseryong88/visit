@@ -6,9 +6,7 @@ import {
   GoogleAuthProvider, 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword,
-  updateProfile,
-  browserSessionPersistence,
-  setPersistence
+  updateProfile
 } from 'firebase/auth';
 import { auth, db } from '../firebase';
 import { doc, getDoc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
@@ -68,12 +66,9 @@ export const AdminLogin: React.FC = () => {
         photoURL: user.photoURL || null,
         role: 'admin',
         createdAt: serverTimestamp(),
-        qrText: '모든 방문 목적을 선택할 수 있는\n메인 페이지로 연결됩니다 작성후 관리자에게 보여주시기 바랍니다.',
-        qrTitle: '공통 방문 QR',
+        qrText: '본 현장은 안전작업 허가제 시행 구역입니다.\n작업 전 반드시 QR코드를 스캔하여 허가서를 제출하고 승인을 받은 후 작업을 시작해 주시기 바랍니다.',
+        qrTitle: '현장 접근 및 작업 허가 QR',
       });
-
-      // Seed default purposes
-      await seedDefaultPurposes(user.uid);
     }
     
     navigate('/admin');
@@ -141,56 +136,6 @@ export const AdminLogin: React.FC = () => {
     }
   };
 
-  const seedDefaultPurposes = async (userId: string) => {
-    const defaultPurposes = [
-      {
-        name: '미팅 (회의/상담)',
-        description: '업무 미팅 및 상담을 위해 방문하신 경우',
-        isActive: true,
-        fields: [
-          { id: 'name', label: '방문자 성함', type: 'text', required: true },
-          { id: 'contact', label: '연락처', type: 'tel', required: true },
-          { id: 'company', label: '소속/업체명', type: 'text', required: true },
-          { id: 'person_to_meet', label: '접견 대상자', type: 'text', required: true },
-          { id: 'meeting_room', label: '회의실/장소', type: 'select', required: false, options: ['1층 대회의실', '2층 소회의실', '상담실', '사무실'] },
-        ],
-      },
-      {
-        name: '납품 & 택배',
-        description: '물품 납품 또는 택배 배송을 위해 방문하신 경우',
-        isActive: true,
-        fields: [
-          { id: 'name', label: '방문자 성함', type: 'text', required: true },
-          { id: 'contact', label: '연락처', type: 'tel', required: true },
-          { id: 'company', label: '배송업체명', type: 'text', required: true },
-          { id: 'item_type', label: '물품 종류', type: 'text', required: true },
-          { id: 'recipient', label: '수령인/부서', type: 'text', required: true },
-        ],
-      },
-      {
-        name: '시설 공사 & 점검',
-        description: '시설 유지보수, 공사 및 정기 점검 방문',
-        isActive: true,
-        fields: [
-          { id: 'name', label: '방문자 성함', type: 'text', required: true },
-          { id: 'contact', label: '연락처', type: 'tel', required: true },
-          { id: 'company', label: '업체명', type: 'text', required: true },
-          { id: 'work_desc', label: '작업 내용', type: 'textarea', required: true },
-          { id: 'safety_check', label: '안전 수칙 준수 동의', type: 'checkbox', required: true, options: ['동의함'] },
-        ],
-      },
-    ];
-
-    for (const purpose of defaultPurposes) {
-      await addDoc(collection(db, 'purposes'), {
-        ...purpose,
-        ownerId: userId,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-    }
-  };
-
   if (checkingAuth) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -209,7 +154,7 @@ export const AdminLogin: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900">
             {mode === 'login' ? '관리자 로그인' : '관리자 가입하기'}
           </h1>
-          <p className="text-gray-500 mt-2">디지털 방문일지 관리 시스템</p>
+          <p className="text-gray-500 mt-2">안전작업 허가서 관리 시스템</p>
         </div>
 
         {error && (

@@ -1,39 +1,25 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    
-    // Helper Functions
+    // Helper to check if user is admin
     function isAuthenticated() {
       return request.auth != null;
     }
 
-    function isAdmin() {
-      return isAuthenticated() && 
-             firestore.exists(/databases/(default)/documents/users/$(request.auth.uid)) && 
-             firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    match /logs/{adminId}/{fileName} {
+      // Allow visitors to upload images (signatures, photos)
+      // We can't easily restrict 'upload only' without auth, but we can restrict read.
+      allow write: if true;
+      
+      // Only the admin who owns the log should be able to read the images
+      allow read: if isAuthenticated() && request.auth.uid == adminId;
     }
-
-    // Rules for visitor logs (signatures, attachments)
-    match /logs/{adminId}/{allPaths=**} {
-      // Visitors can upload (create) and get download URLs (read)
-      allow create: if true;
-      allow get: if true;
-      // Only admins can list, update or delete
-      allow list, update, delete: if isAuthenticated() && (request.auth.uid == adminId || isAdmin());
-    }
-
-    // Rules for branding (logos)
-    match /branding/{adminId}/{allPaths=**} {
-      // Admins can read/write their own branding
-      allow read: if true; // Publicly readable for visitors to see the logo
-      allow write: if isAuthenticated() && (request.auth.uid == adminId || isAdmin());
-    }
-
-    // Rules for notifications
-    match /notifications/{adminId}/{allPaths=**} {
-      // Publicly readable for visitors to see the notification image
+    
+    match /branding/{adminId}/{fileName} {
+      // Admins manage their own branding assets
+      allow write: if isAuthenticated() && request.auth.uid == adminId;
+      // Anyone can read branding assets to see the UI
       allow read: if true;
-      allow write: if isAuthenticated() && (request.auth.uid == adminId || isAdmin());
     }
   }
 }

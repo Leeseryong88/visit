@@ -7,7 +7,8 @@ import { Card, Button, Input, Label } from '../components/ui/Button';
 import { DynamicForm } from '../components/DynamicForm';
 import { SignaturePad } from '../components/SignaturePad';
 import { uploadBase64 } from '../lib/storage';
-import { ChevronLeft, Loader2, CheckCircle2, Download, Share2, Bell, X, ClipboardList, AlertCircle } from 'lucide-react';
+import { SAFETY_INFO_DATA } from '../lib/safetyData';
+import { ChevronLeft, Loader2, CheckCircle2, Download, Bell, X, ClipboardList, AlertCircle, ShieldAlert, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { domToPng } from 'modern-screenshot';
@@ -25,6 +26,7 @@ export const VisitorForm: React.FC = () => {
   const [submittedLog, setSubmittedLog] = useState<any>(null);
   
   // Modal states
+  const [showSafetyInfo, setShowSafetyInfo] = useState(true);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [showSignatureModal, setShowSignatureModal] = useState(false);
@@ -71,7 +73,7 @@ export const VisitorForm: React.FC = () => {
           }
         } else {
           console.warn('Purpose not found:', cleanPurposeId);
-          setError('해당 방문 목적을 찾을 수 없습니다.');
+          setError('해당 허가서 양식을 찾을 수 없습니다.');
         }
       } catch (err: any) {
         console.error('Data parsing error:', err);
@@ -86,6 +88,8 @@ export const VisitorForm: React.FC = () => {
 
     return () => unsubscribe();
   }, [purposeId, adminId, navigate]);
+
+  const safetyInfo = purpose ? SAFETY_INFO_DATA[purpose.name] : null;
 
   const handleFieldChange = (id: string, value: any) => {
     setFormData(prev => ({ ...prev, [id]: value }));
@@ -303,19 +307,24 @@ export const VisitorForm: React.FC = () => {
                   )}
                 </div>
               )}
-              <h2 className="text-2xl font-bold" style={{ color: '#111827' }}>{adminData?.brandingTitle || '디지털 방문일지'}</h2>
-              <p className="text-sm font-medium mt-1" style={{ color: '#16a34a' }}>방문일지가 성공적으로 접수되었습니다.</p>
+              <h2 className="text-2xl font-bold" style={{ color: '#111827' }}>{adminData?.brandingTitle || '안전작업 허가서'}</h2>
+              <p className="text-sm font-medium mt-1" style={{ color: '#16a34a' }}>허가서가 성공적으로 접수되었습니다.</p>
             </div>
 
             <div className="space-y-4 border-t pt-6" style={{ borderTopColor: '#f3f4f6' }}>
               <div className="p-4 rounded-xl" style={{ backgroundColor: '#f9fafb' }}>
-                <p className="text-xs uppercase font-bold tracking-wider mb-1" style={{ color: '#9ca3af' }}>방문 목적</p>
+                <p className="text-xs uppercase font-bold tracking-wider mb-1" style={{ color: '#9ca3af' }}>소속 (업체명)</p>
+                <p className="text-lg font-bold" style={{ color: '#111827' }}>{submittedLog.data.worker_company || submittedLog.data.company || '-'}</p>
+              </div>
+
+              <div className="p-4 rounded-xl" style={{ backgroundColor: '#f9fafb' }}>
+                <p className="text-xs uppercase font-bold tracking-wider mb-1" style={{ color: '#9ca3af' }}>작업 종류</p>
                 <p className="text-lg font-bold" style={{ color: '#111827' }}>{submittedLog.purposeName}</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 px-2">
                 <div>
-                  <p className="text-xs" style={{ color: '#9ca3af' }}>방문자</p>
+                  <p className="text-xs" style={{ color: '#9ca3af' }}>작업자</p>
                   <p className="font-bold" style={{ color: '#111827' }}>{submittedLog.visitorName}</p>
                 </div>
                 <div>
@@ -326,11 +335,12 @@ export const VisitorForm: React.FC = () => {
 
               <div className="space-y-3 pt-2">
                 {purpose?.fields.map(field => {
-                  if (field.id === 'name' || field.id === 'contact' || (field.type as string) === 'file' || (field.type as string) === 'signature') return null;
+                  const skipKeys = ['name', 'contact', 'worker_name', 'worker_contact', 'company', 'worker_company'];
+                  if (skipKeys.some(sk => field.id.toLowerCase().includes(sk.toLowerCase())) || (field.type as string) === 'file' || (field.type as string) === 'signature') return null;
                   const value = submittedLog.data[field.id];
                   if (!value) return null;
                   return (
-                    <div key={field.id} className="border-b pb-2" style={{ borderBottomColor: '#f9fafb' }}>
+                    <div key={field.id} className="border-b pb-2 px-2" style={{ borderBottomColor: '#f9fafb' }}>
                       <p className="text-xs" style={{ color: '#9ca3af' }}>{field.label}</p>
                       <p className="text-sm font-medium" style={{ color: '#111827' }}>{Array.isArray(value) ? value.join(', ') : value}</p>
                     </div>
@@ -403,7 +413,7 @@ export const VisitorForm: React.FC = () => {
             <Card className="p-6">
               <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
                 <span className="w-1.5 h-6 bg-blue-600 rounded-full" />
-                방문 정보 입력
+                허가서 정보 입력
               </h2>
               
               <DynamicForm
@@ -418,11 +428,83 @@ export const VisitorForm: React.FC = () => {
               type="submit"
               className="w-full h-14 text-lg font-bold shadow-lg"
             >
-              방문일지 제출하기
+              작업 허가서 제출하기
             </Button>
           </form>
         )}
       </main>
+
+      {/* Safety Info Modal */}
+      <AnimatePresence>
+        {showSafetyInfo && safetyInfo && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]"
+            >
+              <div className="p-6 border-b border-gray-100 bg-red-50 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                  <ShieldAlert className="w-6 h-6 text-red-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">{purpose?.name}</h2>
+                  <p className="text-xs text-red-600 font-bold">작업 전 위험요인 및 주의사항 숙지</p>
+                </div>
+              </div>
+              
+              <div className="p-6 overflow-y-auto space-y-8">
+                <section className="space-y-3">
+                  <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-red-500" />
+                    주요 위험요인
+                  </h3>
+                  <ul className="space-y-2">
+                    {safetyInfo.hazards.map((hazard, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-gray-600 leading-relaxed">
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 flex-shrink-0" />
+                        {hazard}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+
+                <section className="space-y-3">
+                  <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                    <Info className="w-4 h-4 text-blue-500" />
+                    안전 주의사항
+                  </h3>
+                  <ul className="space-y-2">
+                    {safetyInfo.precautions.map((precaution, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-gray-600 leading-relaxed">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 flex-shrink-0" />
+                        {precaution}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+
+                <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                  <p className="text-xs text-gray-500 text-center leading-relaxed">
+                    본 작업의 위험요인을 충분히 숙지하였으며,<br />
+                    안전 주의사항을 준수하여 작업할 것을 서약합니다.
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-6 bg-gray-50 border-t border-gray-100">
+                <Button 
+                  className="w-full h-14 text-lg font-bold shadow-lg bg-red-600 hover:bg-red-700" 
+                  onClick={() => setShowSafetyInfo(false)}
+                >
+                  위험요인 숙지 완료
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Privacy Modal */}
       <AnimatePresence>
@@ -438,13 +520,13 @@ export const VisitorForm: React.FC = () => {
                 <h2 className="text-xl font-bold text-gray-900">개인정보 수집 및 이용 동의</h2>
               </div>
               <div className="p-6 max-h-[60vh] overflow-y-auto text-sm text-gray-600 space-y-4">
-                <p>디지털 방문일지 시스템은 원활한 방문 관리를 위해 아래와 같이 개인정보를 수집합니다.</p>
+                <p>안전작업 허가서 시스템은 원활한 작업 안전 관리를 위해 아래와 같이 개인정보를 수집합니다.</p>
                 <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-                  <p><strong>1. 수집 항목:</strong> 성함, 연락처, 소속, 방문 목적 등 작성 항목 일체</p>
-                  <p><strong>2. 수집 목적:</strong> 시설 보안 관리, 방문객 확인, 비상 시 연락</p>
-                  <p><strong>3. 보유 기간:</strong> 수집일로부터 1년 (또는 내부 규정에 따름)</p>
+                  <p><strong>1. 수집 항목:</strong> 성함, 연락처, 소속, 작업 종류 등 작성 항목 일체</p>
+                  <p><strong>2. 수집 목적:</strong> 현장 안전 관리, 작업자 확인, 비상 시 연락</p>
+                  <p><strong>3. 보유 기간:</strong> 수집일로부터 1년 또는 현장 규정 완료 시까지 (이후 복구 불가능한 방법으로 파기)</p>
                 </div>
-                <p>귀하는 동의를 거부할 권리가 있으나, 거부 시 시설 출입이 제한될 수 있습니다.</p>
+                <p>귀하는 동의를 거부할 권리가 있으나, 거부 시 작업 진행이 제한될 수 있습니다.</p>
               </div>
               <div className="p-6 bg-gray-50 flex gap-3">
                 <Button variant="outline" className="flex-1" onClick={() => setShowPrivacyModal(false)}>취소</Button>
@@ -467,13 +549,13 @@ export const VisitorForm: React.FC = () => {
             >
               <div className="p-6 border-b border-gray-100 flex items-center gap-2">
                 <Bell className="w-5 h-5 text-blue-600" />
-                <h2 className="text-xl font-bold text-gray-900">시설관리자 알림</h2>
+                <h2 className="text-xl font-bold text-gray-900">안전관리자 공지사항</h2>
               </div>
               <div 
                 className="p-6 space-y-4"
               >
                 <div className="flex items-center gap-2 text-blue-600">
-                  <p className="text-sm font-medium">시설관리자의 알림이 있습니다. 내용을 확인해 주세요.</p>
+                  <p className="text-sm font-medium">안전관리자의 안내 사항이 있습니다. 내용을 확인해 주세요.</p>
                 </div>
 
                 {purpose?.notificationText && (purpose.notificationType === 'text' || purpose.notificationType === 'both') && (
@@ -491,7 +573,7 @@ export const VisitorForm: React.FC = () => {
                     >
                       <img 
                         src={purpose.notificationImage} 
-                        alt="Admin Notification" 
+                        alt="Safety Notification" 
                         className="w-full h-auto"
                         referrerPolicy="no-referrer"
                         crossOrigin="anonymous"

@@ -7,39 +7,30 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isAdmin() {
-      return isAuthenticated() && (
-        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
-        (request.auth.token.email == "kidcap1001@gmail.com" && request.auth.token.email_verified == true)
-      );
-    }
-
-    function isOwner(data) {
-      return isAuthenticated() && 
-             ('ownerId' in data) && 
-             data.ownerId == request.auth.uid;
-    }
-
     // Rules
     match /purposes/{purposeId} {
       allow read: if true; 
-      allow create: if isAuthenticated();
-      allow update, delete: if isAuthenticated() && (isOwner(resource.data) || isAdmin());
+      allow create: if isAuthenticated() && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
     }
 
     match /logs/{logId} {
-      allow read: if (isAuthenticated() && (resource.data.ownerId == request.auth.uid || isAdmin())) || 
-                     (resource.data.visitorName != null && resource.data.visitorContact != null && resource.data.ownerId != null);
-      allow create: if true; // Visitors can create logs without auth
-      allow update, delete: if isAuthenticated() && (isOwner(resource.data) || isAdmin());
+      // Anyone can create a log
+      allow create: if request.resource.data.ownerId != null;
+
+      // Only the owner (admin) can list/read all logs
+      // For visitors to "search" their log, we allow a very specific query check
+      allow read: if (isAuthenticated() && resource.data.ownerId == request.auth.uid) ||
+                     (request.auth == null && 
+                      resource.data.visitorName != null && 
+                      resource.data.visitorContact != null);
+
+      allow update, delete: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
     }
 
     match /users/{userId} {
-      allow get: if true; // Allowed so visitors can see branding info by knowing adminId
-      allow list: if isAuthenticated() && isAdmin();
-      allow create: if isAuthenticated() && request.auth.uid == userId;
-      allow update: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow get: if true;
+      allow write: if isAuthenticated() && request.auth.uid == userId;
     }
   }
 }

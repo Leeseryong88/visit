@@ -4,16 +4,10 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from './firebase';
 
 // Pages
-import { LandingPage } from './pages/LandingPage';
 import { VisitorHome } from './pages/VisitorHome';
 import { VisitorForm } from './pages/VisitorForm';
 import { AdminLogin } from './pages/AdminLogin';
 import { AdminDashboard } from './pages/AdminDashboard';
-import { AdminPurposes } from './pages/AdminPurposes';
-import { AdminLogs } from './pages/AdminLogs';
-import { AdminQRCodes } from './pages/AdminQRCodes';
-import { AdminSubscription } from './pages/AdminSubscription';
-import { SuperAdmin } from './pages/SuperAdmin';
 
 // Components
 import { AdminLayout } from './components/AdminLayout';
@@ -48,8 +42,8 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Landing Page */}
-        <Route path="/" element={<LandingPage />} />
+        {/* Redirect to Admin Login */}
+        <Route path="/" element={<Navigate to="/admin/login" replace />} />
 
         {/* Visitor Routes (Multi-tenant) */}
         <Route path="/s/:adminId" element={<VisitorHome />} />
@@ -59,17 +53,6 @@ export default function App() {
         <Route path="/admin/login" element={user ? <Navigate to="/admin" replace /> : <AdminLogin />} />
         
         <Route path="/admin" element={<ProtectedRoute user={user}><ErrorBoundary><AdminDashboard /></ErrorBoundary></ProtectedRoute>} />
-        <Route path="/admin/purposes" element={<ProtectedRoute user={user}><ErrorBoundary><AdminPurposes /></ErrorBoundary></ProtectedRoute>} />
-        <Route path="/admin/logs" element={<ProtectedRoute user={user}><ErrorBoundary><AdminLogs /></ErrorBoundary></ProtectedRoute>} />
-        <Route path="/admin/qrcodes" element={<ProtectedRoute user={user}><ErrorBoundary><AdminQRCodes /></ErrorBoundary></ProtectedRoute>} />
-        <Route path="/admin/subscription" element={<ProtectedRoute user={user}><ErrorBoundary><AdminSubscription /></ErrorBoundary></ProtectedRoute>} />
-        <Route path="/admin/super" element={
-          user?.email === 'kidcap1001@gmail.com' ? (
-            <ProtectedRoute user={user}><ErrorBoundary><SuperAdmin /></ErrorBoundary></ProtectedRoute>
-          ) : (
-            <Navigate to="/admin" replace />
-          )
-        } />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -117,7 +117,7 @@ export const VisitorHome: React.FC = () => {
       const snapshot = await getDocs(q);
       
       if (snapshot.empty) {
-        setCheckError('일치하는 방문 기록을 찾을 수 없습니다.');
+        setCheckError('일치하는 허가서 제출 기록을 찾을 수 없습니다.');
       } else {
         // Filter by date in memory to avoid index requirement for now
         const logs = snapshot.docs
@@ -134,7 +134,7 @@ export const VisitorHome: React.FC = () => {
           });
 
         if (logs.length === 0) {
-          setCheckError('해당 날짜의 방문 기록이 없습니다.');
+          setCheckError('해당 날짜의 허가서 제출 기록이 없습니다.');
         } else {
           setFoundLog(logs[0]);
         }
@@ -217,8 +217,8 @@ export const VisitorHome: React.FC = () => {
             )}
           </div>
         )}
-        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">{adminData?.brandingTitle || '디지털 방문일지'}</h1>
-        <p className="text-gray-500 mt-3 font-medium">방문 목적을 선택해 주세요.</p>
+        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">{adminData?.brandingTitle || '안전작업 허가서'}</h1>
+        <p className="text-gray-500 mt-3 font-medium">진행할 작업 종류를 선택해 주세요.</p>
         <p className="text-[10px] text-gray-300 mt-2 tracking-widest">v1.1.0</p>
       </header>
 
@@ -229,9 +229,9 @@ export const VisitorHome: React.FC = () => {
               <ClipboardList className="w-8 h-8 text-gray-300" />
             </div>
             <div>
-              <p className="text-gray-600 font-bold">등록된 방문 목적이 없습니다.</p>
+              <p className="text-gray-600 font-bold">등록된 작업 허가서 양식이 없습니다.</p>
               <p className="text-xs text-gray-400 mt-2">관리자 ID: {adminId}</p>
-              <p className="text-sm text-gray-400 mt-2">관리자가 아직 서식을 생성하지 않았거나<br />일시적인 오류일 수 있습니다.</p>
+              <p className="text-sm text-gray-400 mt-2">관리자가 아직 허가서 서식을 생성하지 않았거나<br />일시적인 오류일 수 있습니다.</p>
             </div>
             <Button 
               variant="outline" 
@@ -276,7 +276,7 @@ export const VisitorHome: React.FC = () => {
             className="w-full h-12 gap-2 border-dashed border-gray-300 text-gray-500 hover:text-blue-600 hover:border-blue-300"
             onClick={() => setShowCheckModal(true)}
           >
-            <Search className="w-4 h-4" /> 작성한 방문일지 확인하기
+            <Search className="w-4 h-4" /> 제출한 허가서 확인하기
           </Button>
         </div>
       </main>
@@ -292,7 +292,7 @@ export const VisitorHome: React.FC = () => {
               className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]"
             >
               <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">방문 기록 확인</h2>
+                <h2 className="text-xl font-bold text-gray-900">허가서 제출 기록 확인</h2>
                 <button onClick={() => { setShowCheckModal(false); setFoundLog(null); setCheckError(null); }} className="p-2 hover:bg-gray-100 rounded-full">
                   <X className="w-5 h-5 text-gray-500" />
                 </button>
@@ -303,7 +303,7 @@ export const VisitorHome: React.FC = () => {
                   <div className="space-y-4">
                     <div className="space-y-1.5">
                       <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-gray-400" /> 방문 일자
+                        <Calendar className="w-4 h-4 text-gray-400" /> 작업 일자
                       </label>
                       <input 
                         type="date" 
@@ -314,7 +314,7 @@ export const VisitorHome: React.FC = () => {
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                        <User className="w-4 h-4 text-gray-400" /> 방문자명
+                        <User className="w-4 h-4 text-gray-400" /> 작업자명
                       </label>
                       <input 
                         type="text" 
@@ -344,7 +344,7 @@ export const VisitorHome: React.FC = () => {
                 ) : (
                   <div className="space-y-6">
                     <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                      <p className="text-xs text-blue-600 font-bold uppercase tracking-wider mb-1">방문 정보 확인됨</p>
+                      <p className="text-xs text-blue-600 font-bold uppercase tracking-wider mb-1">허가서 정보 확인됨</p>
                       <h3 className="text-lg font-bold text-gray-900">{foundLog.visitorName}님</h3>
                       <p className="text-sm text-gray-600">{foundLog.purposeName} • {format(foundLog.visitDate.toDate(), 'yyyy.MM.dd HH:mm', { locale: ko })}</p>
                     </div>

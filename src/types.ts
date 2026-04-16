@@ -35,6 +35,8 @@ export interface VisitorLog {
   ownerId: string;
   visitDate: any;
   createdAt: any;
+  adminSignature?: string;
+  adminSignedAt?: any;
 }
 
 export interface AdminUser {
@@ -42,7 +44,6 @@ export interface AdminUser {
   email: string;
   role: 'admin';
   createdAt: any;
-  isSubscribed?: boolean;
   qrText?: string;
   qrTitle?: string;
   brandingLogo?: string;

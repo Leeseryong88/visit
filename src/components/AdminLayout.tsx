@@ -20,16 +20,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   };
 
   const navItems = [
-    { name: '대시보드', path: '/admin', icon: LayoutDashboard },
-    { name: '방문 목적', path: '/admin/purposes', icon: ClipboardList },
-    { name: '기록 조회', path: '/admin/logs', icon: FileText },
-    { name: 'QR코드', path: '/admin/qrcodes', icon: QrCode },
-    { name: '구독서비스', path: '/admin/subscription', icon: Palette, beta: true },
+    { name: '작업허가서', path: '/admin', icon: LayoutDashboard },
   ];
-
-  if (auth.currentUser?.email === 'kidcap1001@gmail.com') {
-    navItems.push({ name: '운영자 관리', path: '/admin/super', icon: ShieldCheck });
-  }
 
   const currentItem = navItems.find(item => item.path === location.pathname) || navItems[0];
 
@@ -40,7 +32,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         <div className="p-6 border-b border-gray-100">
           <h1 className="text-xl font-bold text-blue-600 flex items-center gap-2">
             <ClipboardList className="w-6 h-6" />
-            디지털 방문일지
+            안전작업 허가서
           </h1>
           <p className="text-xs text-gray-500 mt-1 uppercase tracking-wider font-semibold">Admin Panel</p>
         </div>
@@ -115,7 +107,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         {/* Bottom Navigation (Mobile) */}
         <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-2 pb-safe z-30">
           <div className="flex items-center justify-around h-16">
-            {navItems.slice(0, 5).map((item) => (
+            {navItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
@@ -133,7 +125,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                   <item.icon className="w-5 h-5" />
                 </div>
                 <span className="text-[10px] font-bold truncate px-1">
-                  {item.name === '방문 목적 관리' ? '서식관리' : item.name}
+                  {item.name}
                 </span>
               </Link>
             ))}
