@@ -10,7 +10,6 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
-import { SAFETY_INFO_DATA } from '../lib/safetyData';
 
 export const AdminLogs: React.FC = () => {
   const [logs, setLogs] = useState<VisitorLog[]>([]);
@@ -475,33 +474,37 @@ export const AdminLogs: React.FC = () => {
                   </section>
 
                   {/* Safety Info Section */}
-                  {SAFETY_INFO_DATA[selectedLog.purposeName] && (
+                  {selectedLog.safetyInfoSnapshot && (
                     <section className="mb-10">
                       <h3 className="text-sm font-black text-gray-900 mb-3 flex items-center gap-2">
                         <div className="w-1 h-4 bg-gray-900" />
                         2. 위험요인 및 안전 주의사항 (숙지 확인됨)
                       </h3>
                       <div className="border border-gray-200 p-4 rounded-sm space-y-4 bg-gray-50/30">
-                        <div>
-                          <p className="text-[10px] font-bold text-red-500 mb-2">● 주요 위험요인</p>
-                          <ul className="grid grid-cols-1 gap-1">
-                            {SAFETY_INFO_DATA[selectedLog.purposeName].hazards.map((h, i) => (
-                              <li key={i} className="text-[11px] text-gray-600 flex items-start gap-1">
-                                <span>-</span> {h}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-bold text-blue-500 mb-2">● 안전 주의사항</p>
-                          <ul className="grid grid-cols-1 gap-1">
-                            {SAFETY_INFO_DATA[selectedLog.purposeName].precautions.map((p, i) => (
-                              <li key={i} className="text-[11px] text-gray-600 flex items-start gap-1">
-                                <span>-</span> {p}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
+                        {selectedLog.safetyInfoSnapshot.hazards && selectedLog.safetyInfoSnapshot.hazards.length > 0 && (
+                          <div>
+                            <p className="text-[10px] font-bold text-red-500 mb-2">● 주요 위험요인</p>
+                            <ul className="grid grid-cols-1 gap-1">
+                              {selectedLog.safetyInfoSnapshot.hazards.map((h, i) => (
+                                <li key={i} className="text-[11px] text-gray-600 flex items-start gap-1">
+                                  <span>-</span> {h}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {selectedLog.safetyInfoSnapshot.precautions && selectedLog.safetyInfoSnapshot.precautions.length > 0 && (
+                          <div>
+                            <p className="text-[10px] font-bold text-blue-500 mb-2">● 안전 주의사항</p>
+                            <ul className="grid grid-cols-1 gap-1">
+                              {selectedLog.safetyInfoSnapshot.precautions.map((p, i) => (
+                                <li key={i} className="text-[11px] text-gray-600 flex items-start gap-1">
+                                  <span>-</span> {p}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
                       </div>
                     </section>
                   )}

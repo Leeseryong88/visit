@@ -22,6 +22,9 @@ export interface VisitPurpose {
   notificationType?: 'text' | 'image' | 'both';
   notificationText?: string;
   notificationImage?: string;
+  showSafetyInfo?: boolean;
+  safetyHazards?: string[];
+  safetyPrecautions?: string[];
 }
 
 export interface VisitorLog {
@@ -37,6 +40,10 @@ export interface VisitorLog {
   createdAt: any;
   adminSignature?: string;
   adminSignedAt?: any;
+  safetyInfoSnapshot?: {
+    hazards: string[];
+    precautions: string[];
+  };
 }
 
 export interface AdminUser {

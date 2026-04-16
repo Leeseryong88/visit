@@ -7,7 +7,6 @@ import { Card, Button, Input, Label } from '../components/ui/Button';
 import { DynamicForm } from '../components/DynamicForm';
 import { SignaturePad } from '../components/SignaturePad';
 import { uploadBase64 } from '../lib/storage';
-import { SAFETY_INFO_DATA } from '../lib/safetyData';
 import { ChevronLeft, Loader2, CheckCircle2, Download, Bell, X, ClipboardList, AlertCircle, ShieldAlert, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
@@ -89,7 +88,10 @@ export const VisitorForm: React.FC = () => {
     return () => unsubscribe();
   }, [purposeId, adminId, navigate]);
 
-  const safetyInfo = purpose ? SAFETY_INFO_DATA[purpose.name] : null;
+  const safetyInfo = purpose?.showSafetyInfo ? {
+    hazards: purpose.safetyHazards || [],
+    precautions: purpose.safetyPrecautions || [],
+  } : null;
 
   const handleFieldChange = (id: string, value: any) => {
     setFormData(prev => ({ ...prev, [id]: value }));
@@ -174,6 +176,10 @@ export const VisitorForm: React.FC = () => {
         ownerId: adminId,
         visitDate: new Date(),
         createdAt: serverTimestamp(),
+        safetyInfoSnapshot: purpose.showSafetyInfo ? {
+          hazards: purpose.safetyHazards || [],
+          precautions: purpose.safetyPrecautions || [],
+        } : null,
       };
 
       await addDoc(collection(db, 'logs'), {

@@ -24,6 +24,19 @@ export const AdminPurposes: React.FC = () => {
       name: '화기작업 허가서',
       description: '용접, 용단, 연마 등 불꽃·열·스파크 발생 작업',
       isActive: true,
+      showSafetyInfo: true,
+      safetyHazards: [
+        '용접 불꽃 및 스파크에 의한 화재 발생 위험',
+        '가연성 가스 체류 시 폭발 위험',
+        '고열에 의한 화상 위험',
+        '흄(Fume) 및 유해가스에 의한 질식/중독 위험'
+      ],
+      safetyPrecautions: [
+        '작업 반경 10m 이내 가연물 제거 및 방염시트 설치',
+        '작업 구역 내 소화기 비치 및 화재감시자 배치',
+        '작업 전/중 가연성 가스 농도 측정',
+        '작업 종료 후 1시간 이상 잔불 감시 실시'
+      ],
       fields: [
         { id: 'worker_company', label: '소속 (업체명)', type: 'text', required: true },
         { id: 'worker_name', label: '작업자 성함', type: 'text', required: true },
@@ -40,6 +53,19 @@ export const AdminPurposes: React.FC = () => {
       name: '밀폐공간 작업 허가서',
       description: '탱크, 맨홀, 지하 pit 등 환기 불충분 공간 작업',
       isActive: true,
+      showSafetyInfo: true,
+      safetyHazards: [
+        '산소 결핍에 의한 질식 사고',
+        '황화수소, 일산화탄소 등 유해가스 중독',
+        '가연성 가스 폭발 위험',
+        '추락 및 고립 위험'
+      ],
+      safetyPrecautions: [
+        '작업 전 산소 및 유해가스 농도 측정 필수',
+        '작업 중 지속적인 강제 환기 실시',
+        '외부 감시인 배치 및 비상 연락 체계 구축',
+        '송기 마스크 등 개인 보호구 착용'
+      ],
       fields: [
         { id: 'worker_company', label: '소속 (업체명)', type: 'text', required: true },
         { id: 'worker_name', label: '작업자 성함', type: 'text', required: true },
@@ -55,6 +81,18 @@ export const AdminPurposes: React.FC = () => {
       name: '정전·에너지 차단 작업 허가서 (LOTO)',
       description: '기계 정비, 수리 등 에너지 차단 필요 작업',
       isActive: true,
+      showSafetyInfo: true,
+      safetyHazards: [
+        '불시 가동에 의한 협착 및 절단 사고',
+        '잔류 에너지(전기, 압력 등)에 의한 감전/충격',
+        '유압/공압 해제 시 설비 낙하 위험'
+      ],
+      safetyPrecautions: [
+        '전원 차단 후 개인별 잠금장치(Lock) 및 표식(Tag) 설치',
+        '잔류 에너지 완전히 제거 후 확인 작업 실시',
+        '작업자 전원이 잠금장치를 해제하기 전까지 재가동 금지',
+        '조작 금지 표지판 설치'
+      ],
       fields: [
         { id: 'worker_company', label: '소속 (업체명)', type: 'text', required: true },
         { id: 'worker_name', label: '작업자 성함', type: 'text', required: true },
@@ -69,6 +107,18 @@ export const AdminPurposes: React.FC = () => {
       name: '고소작업 허가서',
       description: '2m 이상 높이에서의 추락 위험 작업',
       isActive: true,
+      showSafetyInfo: true,
+      safetyHazards: [
+        '작업자 추락에 의한 중대재해',
+        '공구 및 자재 낙하에 의한 하부 행인 사고',
+        '강풍 등 기상 악화 시 전도 위험'
+      ],
+      safetyPrecautions: [
+        '안전대(하네스) 착용 및 안전고리 체결 필수',
+        '견고한 작업발판 및 안전난간 설치 확인',
+        '하부 출입통제 구역 설정 및 감시자 배치',
+        '악천후(강풍, 강우, 강설) 시 작업 중지'
+      ],
       fields: [
         { id: 'worker_company', label: '소속 (업체명)', type: 'text', required: true },
         { id: 'worker_name', label: '작업자 성함', type: 'text', required: true },
@@ -83,6 +133,18 @@ export const AdminPurposes: React.FC = () => {
       name: '굴착작업 허가서',
       description: '지반 굴착, 터파기 등 붕괴 위험 작업',
       isActive: true,
+      showSafetyInfo: true,
+      safetyHazards: [
+        '굴착면 붕괴에 의한 매몰 사고',
+        '지하 매설물(가스관, 케이블 등) 파손 및 폭발',
+        '장비(굴착기 등) 전도 및 협착'
+      ],
+      safetyPrecautions: [
+        '지반 종류에 따른 안전 기울기 준수 및 흙막이 지보공 설치',
+        '작업 전 지하 매설물 위치 확인 및 표식 설치',
+        '굴착 상부 하중(장비, 자재) 적재 금지',
+        '작업 구역 내 관계자 외 출입 통제'
+      ],
       fields: [
         { id: 'worker_company', label: '소속 (업체명)', type: 'text', required: true },
         { id: 'worker_name', label: '작업자 성함', type: 'text', required: true },
@@ -97,6 +159,18 @@ export const AdminPurposes: React.FC = () => {
       name: '중량물 취급/양중작업 허가서',
       description: '크레인 등을 이용한 중량물 이동 작업',
       isActive: true,
+      showSafetyInfo: true,
+      safetyHazards: [
+        '줄걸이 와이어 파단으로 인한 화물 낙하',
+        '양중 장비(크레인 등) 전도 사고',
+        '화물과 주변 구조물 사이에 협착'
+      ],
+      safetyPrecautions: [
+        '장비별 정격 하중 준수 및 과부하 방지장치 작동 확인',
+        '신호수 지정 및 표준 신호 체계 준수',
+        '작업 반경 내 출입 통제 및 하부 통행 금지',
+        '와이어로프 및 슬링벨트 사전 점검'
+      ],
       fields: [
         { id: 'worker_company', label: '소속 (업체명)', type: 'text', required: true },
         { id: 'worker_name', label: '작업자 성함', type: 'text', required: true },
@@ -111,6 +185,18 @@ export const AdminPurposes: React.FC = () => {
       name: '화학물질 취급 작업 허가서',
       description: '유해·위험 화학물질 취급, 이송, 혼합 작업',
       isActive: true,
+      showSafetyInfo: true,
+      safetyHazards: [
+        '유해물질 누출에 의한 중독 및 화학 화상',
+        '인화성 물질에 의한 화재 및 폭발',
+        '화학 반응에 의한 유해가스 발생'
+      ],
+      safetyPrecautions: [
+        '해당 물질의 MSDS 숙지 및 현장 비치',
+        '물질 특성에 맞는 보호구(방독마스크, 내화학장갑 등) 착용',
+        '누출 방지 턱(Dike) 설치 및 비상 세척 시설 확보',
+        '화기 엄금 및 정전기 방지 조치'
+      ],
       fields: [
         { id: 'worker_company', label: '소속 (업체명)', type: 'text', required: true },
         { id: 'worker_name', label: '작업자 성함', type: 'text', required: true },
@@ -200,6 +286,9 @@ export const AdminPurposes: React.FC = () => {
         name: '',
         description: '',
         isActive: true,
+        showSafetyInfo: false,
+        safetyHazards: [''],
+        safetyPrecautions: [''],
         fields: [
           { id: 'company', label: '소속 (업체명)', type: 'text', required: true },
           { id: 'name', label: '작업자 성함', type: 'text', required: true },
@@ -208,6 +297,35 @@ export const AdminPurposes: React.FC = () => {
       });
     }
     setIsModalOpen(true);
+  };
+
+  const handleAddSafetyItem = (type: 'hazards' | 'precautions') => {
+    if (!editingPurpose) return;
+    const field = type === 'hazards' ? 'safetyHazards' : 'safetyPrecautions';
+    setEditingPurpose({
+      ...editingPurpose,
+      [field]: [...(editingPurpose[field] || []), ''],
+    });
+  };
+
+  const handleRemoveSafetyItem = (type: 'hazards' | 'precautions', index: number) => {
+    if (!editingPurpose) return;
+    const field = type === 'hazards' ? 'safetyHazards' : 'safetyPrecautions';
+    setEditingPurpose({
+      ...editingPurpose,
+      [field]: (editingPurpose[field] || []).filter((_, i) => i !== index),
+    });
+  };
+
+  const handleSafetyItemChange = (type: 'hazards' | 'precautions', index: number, value: string) => {
+    if (!editingPurpose) return;
+    const field = type === 'hazards' ? 'safetyHazards' : 'safetyPrecautions';
+    const newList = [...(editingPurpose[field] || [])];
+    newList[index] = value;
+    setEditingPurpose({
+      ...editingPurpose,
+      [field]: newList,
+    });
   };
 
   const handleAddField = () => {
@@ -260,6 +378,8 @@ export const AdminPurposes: React.FC = () => {
       const purposeData = {
         ...editingPurpose,
         fields: cleanedFields,
+        safetyHazards: editingPurpose.safetyHazards?.map(h => h.trim()).filter(Boolean) || [],
+        safetyPrecautions: editingPurpose.safetyPrecautions?.map(p => p.trim()).filter(Boolean) || [],
         ownerId: user.uid,
         updatedAt: serverTimestamp(),
       };
@@ -495,7 +615,83 @@ export const AdminPurposes: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-4 pt-4 border-t border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-base md:text-lg font-bold text-gray-900">작업 전 안전 숙지 사항</Label>
+                      <p className="text-xs text-gray-500">작업자가 양식 작성 전 반드시 확인해야 하는 위험요인 및 주의사항입니다.</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        className="sr-only peer"
+                        checked={editingPurpose?.showSafetyInfo}
+                        onChange={(e) => setEditingPurpose({ ...editingPurpose, showSafetyInfo: e.target.checked })}
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+
+                  {editingPurpose?.showSafetyInfo && (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-top-2 duration-200">
+                      {/* Hazards */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs font-bold text-red-600 uppercase tracking-wider flex items-center gap-1.5">
+                            <ShieldAlert className="w-3.5 h-3.5" /> 주요 위험요인
+                          </Label>
+                          <Button variant="ghost" size="sm" onClick={() => handleAddSafetyItem('hazards')} className="h-7 text-[10px] gap-1 text-red-600 hover:bg-red-50">
+                            <Plus className="w-3 h-3" /> 추가
+                          </Button>
+                        </div>
+                        <div className="space-y-2">
+                          {editingPurpose.safetyHazards?.map((hazard, index) => (
+                            <div key={index} className="flex gap-2">
+                              <Input
+                                value={hazard}
+                                onChange={(e) => handleSafetyItemChange('hazards', index, e.target.value)}
+                                placeholder="위험요인을 입력하세요 (예: 추락 위험)"
+                                className="h-9 text-sm"
+                              />
+                              <Button variant="ghost" size="icon" onClick={() => handleRemoveSafetyItem('hazards', index)} className="h-9 w-9 text-gray-400 hover:text-red-500">
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Precautions */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs font-bold text-blue-600 uppercase tracking-wider flex items-center gap-1.5">
+                            <ShieldAlert className="w-3.5 h-3.5" /> 안전 주의사항
+                          </Label>
+                          <Button variant="ghost" size="sm" onClick={() => handleAddSafetyItem('precautions')} className="h-7 text-[10px] gap-1 text-blue-600 hover:bg-blue-50">
+                            <Plus className="w-3 h-3" /> 추가
+                          </Button>
+                        </div>
+                        <div className="space-y-2">
+                          {editingPurpose.safetyPrecautions?.map((precaution, index) => (
+                            <div key={index} className="flex gap-2">
+                              <Input
+                                value={precaution}
+                                onChange={(e) => handleSafetyItemChange('precautions', index, e.target.value)}
+                                placeholder="주의사항을 입력하세요 (예: 안전대 착용)"
+                                className="h-9 text-sm"
+                              />
+                              <Button variant="ghost" size="icon" onClick={() => handleRemoveSafetyItem('precautions', index)} className="h-9 w-9 text-gray-400 hover:text-red-500">
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-4 pt-4 border-t border-gray-100">
                   <div className="flex items-center justify-between">
                     <Label className="text-base md:text-lg font-bold text-gray-900">입력 항목 구성</Label>
                     <Button variant="outline" size="sm" onClick={handleAddField} className="gap-2 h-9 md:h-auto">
