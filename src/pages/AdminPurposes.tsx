@@ -800,7 +800,7 @@ export const AdminPurposes: React.FC = () => {
                     onChange={(e) => setEditingPurpose({ ...editingPurpose, isActive: e.target.checked })}
                     className="w-5 h-5 md:w-4 md:h-4 rounded text-blue-600"
                   />
-                  <span className="text-sm md:text-base font-medium text-gray-700">이 목적을 활성화합니다</span>
+                  <span className="text-sm md:text-base font-medium text-gray-700">활성화</span>
                 </label>
                 <div className="flex gap-3">
                   <Button variant="outline" onClick={() => setIsModalOpen(false)} className="flex-1 md:flex-none h-12 md:h-auto">취소</Button>
