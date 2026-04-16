@@ -1,18 +1,19 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    // Helper to check if user is admin
+    // Helper to check if user is authenticated
     function isAuthenticated() {
       return request.auth != null;
     }
 
     match /logs/{adminId}/{fileName} {
-      // Allow visitors to upload images (signatures, photos)
-      // We can't easily restrict 'upload only' without auth, but we can restrict read.
+      // Allow anyone to upload (visitors need this for signatures and photos)
       allow write: if true;
       
-      // Only the admin who owns the log should be able to read the images
-      allow read: if isAuthenticated() && request.auth.uid == adminId;
+      // get: Allow anyone to get the download URL (needed right after upload)
+      // list: Only the admin who owns the folder can list files
+      allow get: if true;
+      allow list: if isAuthenticated() && request.auth.uid == adminId;
     }
     
     match /branding/{adminId}/{fileName} {
